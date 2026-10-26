@@ -26,6 +26,13 @@ export const auth = betterAuth({
         required: false,
         defaultValue: "America/Bogota",
       },
+      // Sin verificar. Antes de usarlo para avisos por SMS o WhatsApp hay
+      // que confirmarlo con un código: un teléfono que nadie comprobó no
+      // sirve como canal de seguridad.
+      telefono: {
+        type: "string",
+        required: false,
+      },
       // activa | suspendida | eliminación pendiente.
       // `input: false` impide que llegue desde la petición: el estado de una
       // cuenta solo lo cambia el equipo desde el panel.

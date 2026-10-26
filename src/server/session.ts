@@ -1,6 +1,9 @@
 import { headers } from "next/headers";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "./auth";
+import { db } from "./db/client";
+import { user } from "./db/schema";
 import { obtenerPareja, type ParejaActiva } from "./modules/pareja";
 import { urlsDeFotos } from "./modules/almacenamiento";
 
@@ -22,7 +25,11 @@ export async function requerirSesion() {
 export type ContextoApp = {
   userId: string;
   email: string;
+  /** Primer nombre, para saludar. */
   nombre: string;
+  /** Tal como lo escribió, para los formularios. */
+  nombreCompleto: string;
+  telefono: string | null;
   zona: string;
   /** Enlace firmado, caduca en una hora. */
   fotoUrl: string | null;
@@ -34,28 +41,47 @@ export type ContextoApp = {
 export async function contextoApp(): Promise<ContextoApp> {
   const sesion = await requerirSesion();
 
-  const u = sesion.user as typeof sesion.user & {
-    zonaHoraria?: string | null;
-    estado?: string | null;
-    image?: string | null;
-  };
+  // El perfil se lee de la base, no del payload de la sesión: la cookie se
+  // cachea cinco minutos y un cambio de nombre o de foto no se vería hasta
+  // que caducara. La sesión sirve para autenticar; los datos, para mostrar.
+  const perfil = await db.query.user.findFirst({
+    where: eq(user.id, sesion.user.id),
+    columns: {
+      id: true,
+      email: true,
+      name: true,
+      image: true,
+      telefono: true,
+      zonaHoraria: true,
+      estado: true,
+    },
+  });
+
+  if (!perfil) redirect("/entrar");
 
   // Una cuenta suspendida no debe poder seguir usando la app.
-  if (u.estado && u.estado !== "activa") redirect("/cuenta-suspendida");
+  if (perfil.estado && perfil.estado !== "activa") {
+    redirect("/cuenta-suspendida");
+  }
 
-  const zona = u.zonaHoraria || "America/Bogota";
-  const pareja = await obtenerPareja(u.id, zona);
+  const zona = perfil.zonaHoraria || "America/Bogota";
+  const pareja = await obtenerPareja(perfil.id, zona);
 
   // Las dos se firman juntas para no pagar dos viajes separados.
   const [fotoUrl, parejaFotoUrl] = await urlsDeFotos([
-    u.image ?? null,
+    perfil.image ?? null,
     pareja?.parejaFoto ?? null,
   ]);
 
+  const nombreCompleto = perfil.name?.trim() ?? "";
+
   return {
-    userId: u.id,
-    email: u.email,
-    nombre: u.name?.trim().split(" ")[0] || capitalizar(u.email.split("@")[0]),
+    userId: perfil.id,
+    email: perfil.email,
+    nombre:
+      nombreCompleto.split(" ")[0] || capitalizar(perfil.email.split("@")[0]),
+    nombreCompleto,
+    telefono: perfil.telefono ?? null,
     zona,
     fotoUrl,
     parejaFotoUrl,

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { CerrarSesion } from "./cerrar-sesion";
 import { SubirFoto } from "@/components/subir-foto";
+import { EditarPerfil } from "./editar-perfil";
 import { ZonaDelicada } from "./zona-delicada";
 import { contextoApp } from "@/server/session";
 import { formatDate } from "@/lib/utils";
@@ -19,11 +20,20 @@ export default async function AjustesPage() {
 
       <div className="space-y-4">
         <Card className="p-6">
-          <h2 className="text-xl">Tu foto</h2>
+          <h2 className="text-xl">Tu perfil</h2>
           <p className="text-muted mt-2 mb-5 text-sm leading-relaxed">
-            Es lo que ve tu pareja en el espacio de los dos.
+            Tu foto y tu nombre son lo que ve tu pareja en el espacio de los
+            dos.
           </p>
+
           <SubirFoto urlActual={ctx.fotoUrl} nombre={ctx.nombre} />
+
+          <div className="border-ink-700/10 mt-6 border-t pt-6 dark:border-white/10">
+            <EditarPerfil
+              nombreInicial={ctx.nombreCompleto}
+              telefonoInicial={ctx.telefono}
+            />
+          </div>
         </Card>
 
         <Card className="p-6">

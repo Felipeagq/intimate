@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Avatar, AvatarPareja } from "@/components/ui/avatar";
 import { BotonOrar } from "./boton-orar";
 import { contextoApp } from "@/server/session";
 import { obtenerMetricas, rachaDePareja } from "@/server/modules/oracion";
@@ -59,9 +60,22 @@ export default async function InicioPage() {
 
   return (
     <div className="space-y-4">
-      <div className="mb-6">
-        <p className="text-muted text-sm capitalize">{hoy}</p>
-        <h1 className="mt-1 text-3xl sm:text-4xl">Hola, {ctx.nombre}</h1>
+      <div className="mb-6 flex items-center gap-4">
+        {ctx.pareja ? (
+          <AvatarPareja
+            unoUrl={ctx.fotoUrl}
+            unoNombre={ctx.nombre}
+            dosUrl={ctx.parejaFotoUrl}
+            dosNombre={ctx.pareja.parejaNombre}
+            tamano="lg"
+          />
+        ) : (
+          <Avatar url={ctx.fotoUrl} nombre={ctx.nombre} tamano="lg" />
+        )}
+        <div className="min-w-0">
+          <p className="text-muted text-sm capitalize">{hoy}</p>
+          <h1 className="mt-1 text-3xl sm:text-4xl">Hola, {ctx.nombre}</h1>
+        </div>
       </div>
 
       {/* --- Devocional de hoy --- */}
