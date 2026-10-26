@@ -14,6 +14,7 @@ import { buttonStyles } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { contextoApp } from "@/server/session";
+import { fechaLocal } from "@/server/modules/fecha";
 import {
   listarDevocionales,
   type ItemDevocional,
@@ -64,6 +65,16 @@ export default async function HistorialPage({
   }
 
   const nombrePareja = ctx.pareja?.parejaNombre ?? "tu pareja";
+
+  const mesActual = fechaLocal(ctx.zona).slice(0, 7);
+  const resumen = [
+    { valor: devocionales.length, etiqueta: "En total" },
+    {
+      valor: devocionales.filter((d) => d.fechaLocal.startsWith(mesActual)).length,
+      etiqueta: "Este mes",
+    },
+    { valor: devocionales.filter((d) => d.completado).length, etiqueta: "Terminados" },
+  ];
 
   return (
     <div>
@@ -134,10 +145,14 @@ export default async function HistorialPage({
         />
       ) : (
         <div className="space-y-6">
-          <p className="text-muted text-sm">
-            {devocionales.length}{" "}
-            {devocionales.length === 1 ? "devocional" : "devocionales"}
-          </p>
+          <Card className="divide-ink-700/10 grid grid-cols-3 divide-x p-4 dark:divide-white/10">
+            {resumen.map((r) => (
+              <div key={r.etiqueta} className="px-2 text-center">
+                <p className="font-display text-2xl sm:text-3xl">{r.valor}</p>
+                <p className="text-muted mt-0.5 text-xs">{r.etiqueta}</p>
+              </div>
+            ))}
+          </Card>
 
           {meses.map((grupo) => (
             <section key={grupo.mes}>

@@ -1,7 +1,11 @@
 "use client";
 
 import { User, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+
+type Tono = "neutral" | "honey" | "success" | "warning";
+export type EstadoTipo = { texto: string; tono: Tono };
 
 export type Tipo = "personal" | "pareja";
 
@@ -26,10 +30,13 @@ export function SelectorTipo({
   valor,
   onCambiar,
   orden = ["personal", "pareja"],
+  estados,
 }: {
   valor: Tipo;
   onCambiar: (tipo: Tipo) => void;
   orden?: Tipo[];
+  /** Si se pasa, cada opción muestra en qué punto va hoy en vez de su descripción. */
+  estados?: Record<Tipo, EstadoTipo>;
 }) {
   return (
     <div
@@ -48,7 +55,7 @@ export function SelectorTipo({
             aria-checked={activo}
             onClick={() => onCambiar(tipo)}
             className={cn(
-              "flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border p-3 text-left transition-colors duration-200",
+              "flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border p-3.5 text-left transition-colors duration-200",
               activo
                 ? "bg-honey-300 text-ink-700 border-transparent"
                 : "glass glass-hover text-foreground",
@@ -57,14 +64,23 @@ export function SelectorTipo({
             <Icono className="size-5 shrink-0" aria-hidden />
             <span className="min-w-0">
               <span className="block text-sm font-medium">{titulo}</span>
-              <span
-                className={cn(
-                  "block text-xs leading-snug",
-                  activo ? "text-ink-700/80" : "text-muted",
-                )}
-              >
-                {ayuda}
-              </span>
+              {estados ? (
+                <Badge
+                  tone={activo ? "neutral" : estados[tipo].tono}
+                  className="mt-1 text-[0.7rem]"
+                >
+                  {estados[tipo].texto}
+                </Badge>
+              ) : (
+                <span
+                  className={cn(
+                    "block text-xs leading-snug",
+                    activo ? "text-ink-700/80" : "text-muted",
+                  )}
+                >
+                  {ayuda}
+                </span>
+              )}
             </span>
           </button>
         );

@@ -5,7 +5,9 @@ import { Check, EyeOff, Lock, Save } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, Textarea, Input } from "@/components/ui/field";
+import { Field, Input } from "@/components/ui/field";
+import { EditorEnriquecido } from "@/components/editor-enriquecido";
+import { TextoEnriquecido } from "@/components/texto-enriquecido";
 import { Mensaje } from "./mensaje";
 import {
   Seccion,
@@ -137,25 +139,26 @@ export function DevocionalParejaDetalle({
       </Card>
 
       <Card className="p-6">
-        <Field
-          htmlFor="mi-respuesta"
-          label="Lo que Dios me dijo"
-          hint={
-            devocional.revelado
+        <div className="mb-2 flex items-baseline gap-2 text-sm">
+          <span id="etiqueta-mi-respuesta" className="font-medium">
+            Lo que Dios me dijo
+          </span>
+          <span className="text-muted text-xs">
+            {devocional.revelado
               ? "Ya se reveló"
-              : "Solo tú lo ves hasta que los dos escriban"
-          }
-        >
-          <Textarea
-            id="mi-respuesta"
-            value={respuesta}
-            onChange={(e) => {
-              setRespuesta(e.target.value);
-              setGuardado(false);
-            }}
-            placeholder="No tiene que ser largo. Una frase honesta vale más que una página."
-          />
-        </Field>
+              : "Solo tú lo ves hasta que los dos escriban"}
+          </span>
+        </div>
+        <EditorEnriquecido
+          valor={respuesta}
+          limite={4000}
+          idEtiqueta="etiqueta-mi-respuesta"
+          placeholder="No tiene que ser largo. Una frase honesta vale más que una página."
+          onCambio={(md) => {
+            setRespuesta(md);
+            setGuardado(false);
+          }}
+        />
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button
@@ -196,7 +199,10 @@ export function DevocionalParejaDetalle({
         </div>
 
         {devocional.revelado ? (
-          <p className="mt-3 leading-relaxed">{devocional.respuestaPareja}</p>
+          <TextoEnriquecido
+            className="mt-3"
+            markdown={devocional.respuestaPareja ?? ""}
+          />
         ) : (
           <div className="mt-4 flex items-start gap-3">
             <Lock className="text-muted mt-0.5 size-5 shrink-0" aria-hidden />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AlertCircle, BookOpen, Check } from "lucide-react";
+import { AlertCircle, Check, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { buscarPasaje } from "@/actions/biblia";
 
@@ -12,7 +12,7 @@ export type PasajeEncontrado = {
 };
 
 /**
- * Botón "Traer texto": toma la cita que escribió la persona y devuelve el
+ * Botón "Buscar texto": toma la cita que escribió la persona y devuelve el
  * pasaje al formulario que lo contiene. No guarda nada por su cuenta: el
  * formulario decide qué hacer con el texto, y la persona puede editarlo.
  */
@@ -57,8 +57,8 @@ export function BuscarPasaje({
         disabled={!referencia.trim()}
         onClick={traer}
       >
-        <BookOpen className="size-4" aria-hidden />
-        Traer el texto
+        <Search className="size-4" aria-hidden />
+        Buscar texto
       </Button>
 
       {traduccion && (

@@ -131,7 +131,7 @@ export function SeccionesPasaje({
         {pendiente ? (
           <p className="text-muted flex items-center gap-1.5">
             <Loader2 className="size-3.5 animate-spin" aria-hidden />
-            Trayendo el texto…
+            Buscando el texto…
           </p>
         ) : traduccion && texto && !editando ? (
           <p className="text-muted flex items-center gap-1.5">

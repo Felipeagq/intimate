@@ -137,6 +137,10 @@ export async function desvincular() {
 
 // ------------------------------------------------------------- Devocional
 
+// El editor limita el texto visible a 4.000 caracteres; guardado como Markdown
+// ocupa más por los símbolos de formato, así que el tope del servidor es mayor.
+const LIMITE_RICO = 8000;
+
 const RUTAS_DEVOCIONAL = ["/devocional", "/devocional/historial", "/inicio"];
 
 const esquemaDevocionalPareja = z.object({
@@ -172,7 +176,7 @@ export async function guardarRespuestaDevocional(
       .string()
       .trim()
       .min(1, "Escribe algo antes de guardar.")
-      .max(4000)
+      .max(LIMITE_RICO)
       .parse(contenido);
     return devocionalModulo.guardarRespuesta(
       ctx.userId,
@@ -189,9 +193,9 @@ const esquemaSoap = z.object({
   id: z.string().uuid().optional(),
   pasaje: z.string().trim().min(2, "Escribe el pasaje.").max(120),
   textoPasaje: z.string().trim().max(4000).optional(),
-  observacion: z.string().trim().max(4000).optional(),
-  aplicacion: z.string().trim().max(4000).optional(),
-  oracion: z.string().trim().max(4000).optional(),
+  observacion: z.string().trim().max(LIMITE_RICO).optional(),
+  aplicacion: z.string().trim().max(LIMITE_RICO).optional(),
+  oracion: z.string().trim().max(LIMITE_RICO).optional(),
   completado: z.boolean().optional(),
 });
 

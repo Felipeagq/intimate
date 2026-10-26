@@ -1,5 +1,6 @@
 import { DevocionalView } from "./devocional-view";
 import { contextoApp } from "@/server/session";
+import { formatDate } from "@/lib/utils";
 import {
   devocionalDeParejaHoy,
   devocionalPersonalAbierto,
@@ -27,6 +28,12 @@ export default async function DevocionalPage() {
       nombrePareja={ctx.pareja?.parejaNombre ?? null}
       miNombre={ctx.nombre}
       devocionalPareja={pareja}
+      fecha={formatDate(new Date(), {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        timeZone: ctx.zona,
+      })}
       personal={
         personal
           ? {
