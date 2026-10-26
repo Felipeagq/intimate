@@ -23,36 +23,28 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
 
   /**
-   * En Amplify WEB_COMPUTE las variables configuradas en la consola existen
-   * durante el BUILD pero no llegan al proceso SSR en runtime. Declararlas
-   * aquí hace que Next las inserte en tiempo de build, que es cuando Amplify
-   * sí las expone. Sin este bloque, la base de datos, el correo y las fotos
-   * funcionan en local (.env) pero fallarían en producción.
+   * Nota sobre variables de entorno en Amplify: aquí NO va un bloque `env`
+   * para "inyectarlas". Se intentó y no sirve para este proyecto, por dos
+   * razones:
    *
-   * Next solo las incrusta donde se referencian. Todas se leen desde
-   * `src/server/env.ts`, que es código de servidor: por eso no acaban en el
-   * paquete que descarga el navegador. Mantener esa regla es lo que las deja
-   * fuera del cliente, así que ninguna debe leerse desde un componente
-   * marcado con "use client".
+   * 1. La clave `env` de Next.js solo sustituye el texto literal
+   *    `process.env.CLAVE` donde aparece en el código (es una sustitución
+   *    de webpack, no una variable de entorno real). `src/server/env.ts`
+   *    lee `process.env` como objeto completo con
+   *    `schema.safeParse(process.env)`, así que no hay ningún
+   *    `process.env.DATABASE_URL` literal que sustituir.
+   *
+   * 2. Aunque se leyeran una por una, el cómputo SSR de Amplify no hereda
+   *    las variables configuradas en la consola: esas solo existen como
+   *    variables de shell durante el build. Así lo documenta AWS.
+   *
+   * La solución real está en `amplify.yml`: ahí se vuelcan las variables de
+   * la consola a `.env.production` durante el build, que es el archivo que
+   * Next.js carga automáticamente tanto al compilar como al arrancar el
+   * servidor que atiende cada petición. Si se agrega una variable nueva a
+   * `src/server/env.ts`, hay que añadirla también a esa línea de
+   * `amplify.yml`, o nunca llegará a producción aunque esté en la consola.
    */
-  env: {
-    DATABASE_URL: process.env.DATABASE_URL,
-    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
-    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
-
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-
-    SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
-    EMAIL: process.env.EMAIL,
-    EMAIL_NOMBRE: process.env.EMAIL_NOMBRE,
-
-    S3_BUCKET: process.env.S3_BUCKET,
-    S3_REGION: process.env.S3_REGION,
-    S3_FOLDER: process.env.S3_FOLDER,
-    S3_AWS_ACCESS_KEY_ID: process.env.S3_AWS_ACCESS_KEY_ID,
-    S3_AWS_SECRET_ACCESS_KEY: process.env.S3_AWS_SECRET_ACCESS_KEY,
-  },
 };
 
 export default nextConfig;

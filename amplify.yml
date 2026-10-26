@@ -8,6 +8,13 @@ frontend:
         - pnpm install --frozen-lockfile
     build:
       commands:
+        # Las variables de la consola de Amplify solo existen como variables
+        # de shell durante el build; el cómputo SSR en runtime no las hereda
+        # (documentado por AWS: "a Next.js server component doesn't have
+        # access to those environment variables by default"). Por eso se
+        # vuelcan aquí a .env.production, que Next.js sí carga tanto en el
+        # build como al arrancar el servidor que atiende cada petición.
+        - env | grep -E '^(DATABASE_URL|BETTER_AUTH_SECRET|BETTER_AUTH_URL|GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET|SENDGRID_API_KEY|EMAIL|EMAIL_NOMBRE|S3_BUCKET|S3_REGION|S3_FOLDER|S3_AWS_ACCESS_KEY_ID|S3_AWS_SECRET_ACCESS_KEY)=' >> .env.production
         - pnpm run build
   artifacts:
     baseDirectory: .next
