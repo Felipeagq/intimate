@@ -8,6 +8,13 @@
       "when": 1792983079654,
       "tag": "0000_chilly_talkback",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792983842029,
+      "tag": "0001_panoramic_cerise",
+      "breakpoints": true
     }
   ]
 }

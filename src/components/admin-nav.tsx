@@ -4,16 +4,44 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarChart3, LifeBuoy, ScrollText, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { Rol } from "@/server/auth-admin";
 
 const items = [
-  { href: "/admin", label: "Dashboard", icon: BarChart3 },
-  { href: "/admin/soporte", label: "Soporte", icon: LifeBuoy },
-  { href: "/admin/auditoria", label: "Auditoría", icon: ScrollText },
-  { href: "/admin/configuracion", label: "Configuración", icon: Settings2 },
+  { href: "/admin", label: "Dashboard", icon: BarChart3, roles: null },
+  {
+    href: "/admin/soporte",
+    label: "Soporte",
+    icon: LifeBuoy,
+    roles: ["admin", "soporte"] as const,
+  },
+  {
+    href: "/admin/auditoria",
+    label: "Auditoría",
+    icon: ScrollText,
+    roles: ["admin"] as const,
+  },
+  {
+    href: "/admin/configuracion",
+    label: "Configuración",
+    icon: Settings2,
+    roles: ["admin"] as const,
+  },
 ];
 
-export function AdminNav({ horizontal = false }: { horizontal?: boolean }) {
+export function AdminNav({
+  rol,
+  horizontal = false,
+}: {
+  rol: Rol;
+  horizontal?: boolean;
+}) {
   const pathname = usePathname();
+
+  // Ocultar lo que el rol no puede abrir. Esconderlo es solo cortesía:
+  // la puerta real la cierra `requerirAdmin()` en cada página.
+  const visibles = items.filter(
+    (i) => !i.roles || (i.roles as readonly string[]).includes(rol),
+  );
 
   return (
     <nav
@@ -22,7 +50,7 @@ export function AdminNav({ horizontal = false }: { horizontal?: boolean }) {
         horizontal ? "panel flex gap-1 overflow-x-auto p-1.5" : "space-y-1",
       )}
     >
-      {items.map(({ href, label, icon: Icon }) => {
+      {visibles.map(({ href, label, icon: Icon }) => {
         const active =
           href === "/admin" ? pathname === href : pathname.startsWith(href);
         return (
