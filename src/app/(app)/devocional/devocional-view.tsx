@@ -6,7 +6,7 @@ import { List, UserPlus } from "lucide-react";
 import { buttonStyles } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
-import { cn } from "@/lib/utils";
+import { SelectorTipo, type Tipo } from "./selector-tipo";
 import {
   DevocionalParejaDetalle,
   FormularioPasajePareja,
@@ -27,7 +27,7 @@ export function DevocionalView({
   devocionalPareja: DevocionalPareja | null;
   personal: Personal | null;
 }) {
-  const [modo, setModo] = useState<"pareja" | "personal">(
+  const [modo, setModo] = useState<Tipo>(
     tienePareja ? "pareja" : "personal",
   );
 
@@ -52,28 +52,11 @@ export function DevocionalView({
         }
       />
 
-      <div
-        role="tablist"
-        aria-label="Tipo de devocional"
-        className="glass mb-5 inline-flex gap-1 p-1.5"
-      >
-        {(["pareja", "personal"] as const).map((m) => (
-          <button
-            key={m}
-            role="tab"
-            aria-selected={modo === m}
-            onClick={() => setModo(m)}
-            className={cn(
-              "min-h-11 cursor-pointer rounded-2xl px-5 text-sm font-medium transition-colors duration-200",
-              modo === m
-                ? "bg-honey-300 text-ink-700"
-                : "text-muted hover:text-foreground",
-            )}
-          >
-            {m === "pareja" ? "En pareja" : "Personal"}
-          </button>
-        ))}
-      </div>
+      <SelectorTipo
+        valor={modo}
+        onCambiar={setModo}
+        orden={["pareja", "personal"]}
+      />
 
       {modo === "pareja" ? (
         !tienePareja ? (

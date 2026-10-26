@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check } from "lucide-react";
+import { Check, Eye, HandHeart, Sprout } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, Textarea, Input } from "@/components/ui/field";
@@ -23,19 +23,19 @@ export type Personal = {
 const PASOS = [
   {
     id: "observacion" as const,
-    letra: "O",
+    icono: Eye,
     titulo: "Observación",
     ayuda: "¿Qué dice el texto? ¿De quién habla, qué pasa?",
   },
   {
     id: "aplicacion" as const,
-    letra: "A",
+    icono: Sprout,
     titulo: "Aplicación",
     ayuda: "¿Qué cambia esto en tu semana?",
   },
   {
     id: "oracion" as const,
-    letra: "O",
+    icono: HandHeart,
     titulo: "Oración",
     ayuda: "Escríbelo como se lo dirías a Dios.",
   },
@@ -127,7 +127,7 @@ export function EditorPersonal({
                 onClick={() => setPaso(i)}
                 aria-current={i === paso ? "step" : undefined}
                 className={cn(
-                  "flex min-h-11 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl text-xs font-medium transition-colors duration-200",
+                  "flex min-h-16 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-xs font-medium transition-colors duration-200",
                   i === paso
                     ? "bg-honey-300 text-ink-700"
                     : valores[p.id]
@@ -135,8 +135,8 @@ export function EditorPersonal({
                       : "text-muted hover:bg-white/50 dark:hover:bg-white/8",
                 )}
               >
-                <span className="font-display text-base">{p.letra}</span>
-                <span className="hidden sm:block">{p.titulo}</span>
+                <p.icono className="size-5" aria-hidden />
+                <span>{p.titulo}</span>
               </button>
             </li>
           ))}

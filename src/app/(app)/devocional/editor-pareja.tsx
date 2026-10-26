@@ -6,8 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Textarea, Input } from "@/components/ui/field";
-import { BuscarPasaje } from "@/components/buscar-pasaje";
 import { Mensaje } from "./mensaje";
+import {
+  Seccion,
+  SeccionesPasaje,
+  SeccionQueSigueParejas,
+} from "./pasaje-campos";
 import {
   crearDevocionalDePareja,
   guardarRespuestaDevocional,
@@ -39,8 +43,6 @@ export function FormularioPasajePareja({
   /** Si se pasa, la pantalla navega al devocional creado. */
   alCrear?: (id: string) => void;
 }) {
-  const [pasaje, setPasaje] = useState("");
-  const [texto, setTexto] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pendiente, iniciar] = useTransition();
 
@@ -60,34 +62,10 @@ export function FormularioPasajePareja({
     });
 
   return (
-    <Card className="p-6">
-      <h2 className="text-2xl">Elige el pasaje de hoy</h2>
-      <p className="text-muted mt-2 leading-relaxed">
-        Cualquiera de los dos puede proponerlo. {nombrePareja} lo verá en cuanto
-        lo guardes.
-      </p>
-
-      <form action={crear} className="mt-6 space-y-4">
-        <Field htmlFor="pasaje" label="Pasaje">
-          <Input
-            id="pasaje"
-            name="pasaje"
-            required
-            maxLength={120}
-            value={pasaje}
-            onChange={(e) => setPasaje(e.target.value)}
-            placeholder="Eclesiastés 4:9-12"
-          />
-        </Field>
-        <BuscarPasaje
-          referencia={pasaje}
-          uso="devocional"
-          onEncontrado={(p) => {
-            setPasaje(p.referencia);
-            setTexto(p.texto);
-          }}
-        />
-        <Field htmlFor="titulo" label="Título" hint="Opcional">
+    <form action={crear} className="max-w-xl space-y-4">
+      <SeccionesPasaje placeholder="Eclesiastés 4:9-12" />
+      <Seccion numero={2} titulo="Título" ayuda="Opcional: una frase para recordarlo.">
+        <Field htmlFor="titulo" label="Título">
           <Input
             id="titulo"
             name="titulo"
@@ -95,27 +73,13 @@ export function FormularioPasajePareja({
             placeholder="Cordón de tres dobleces"
           />
         </Field>
-        <Field
-          htmlFor="texto"
-          label="Texto del pasaje"
-          hint="Opcional: se llena con “Traer el texto”"
-        >
-          <Textarea
-            id="texto"
-            name="texto"
-            className="min-h-28"
-            maxLength={4000}
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-          />
-        </Field>
-        <Button type="submit" loading={pendiente}>
-          Empezar el devocional
-        </Button>
-      </form>
-
+      </Seccion>
+      <SeccionQueSigueParejas numero={3} nombrePareja={nombrePareja} />
+      <Button type="submit" size="lg" loading={pendiente} className="w-full sm:w-auto">
+        Empezar el devocional
+      </Button>
       <Mensaje error={error} />
-    </Card>
+    </form>
   );
 }
 
