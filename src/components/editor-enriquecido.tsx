@@ -35,6 +35,7 @@ export function EditorEnriquecido({
   limite,
   placeholder,
   idEtiqueta,
+  herramientas: conjunto = "completas",
   className,
 }: {
   valor: string;
@@ -45,6 +46,11 @@ export function EditorEnriquecido({
   placeholder?: string;
   /** id de la etiqueta que nombra este cuadro, para lectores de pantalla. */
   idEtiqueta: string;
+  /**
+   * "basicas" quita títulos y subtítulos: para respuestas cortas, donde una
+   * barra de siete botones por cuadro pesa más que el texto.
+   */
+  herramientas?: "completas" | "basicas";
   className?: string;
 }) {
   const editor = useEditor({
@@ -99,7 +105,7 @@ export function EditorEnriquecido({
     }),
   });
 
-  const herramientas: {
+  const todas: {
     clave: keyof NonNullable<typeof activo>;
     etiqueta: string;
     icono: LucideIcon;
@@ -150,6 +156,11 @@ export function EditorEnriquecido({
         },
       ]
     : [];
+
+  const herramientas = todas.filter(
+    (h) =>
+      conjunto === "completas" || (h.clave !== "titulo" && h.clave !== "subtitulo"),
+  );
 
   return (
     <div className={cn("editor-enriquecido", className)}>

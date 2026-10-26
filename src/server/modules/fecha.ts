@@ -100,3 +100,42 @@ export function rachaMasLarga(fechas: string[]): number {
   }
   return mejor;
 }
+
+/**
+ * El próximo "mesiversario" de la pareja: el mismo día del mes en que se
+ * vincularon, un mes más cerca de hoy. Si ese día no existe en el mes (el 31
+ * en febrero) cae en el último día. Cuando el mes cumplido es múltiplo de 12
+ * se nombra en años.
+ *
+ * `hoy` cuenta: si el hito es hoy, `dias` es 0.
+ */
+export function proximoHito(
+  desde: string,
+  hoy: string,
+): { fecha: string; dias: number; meses: number; etiqueta: string } {
+  const [a, m, d] = desde.split("-").map(Number);
+  const [ha, hm] = hoy.split("-").map(Number);
+
+  const fechaDe = (n: number) => {
+    const total = m - 1 + n;
+    const anio = a + Math.floor(total / 12);
+    const mes = total % 12;
+    const ultimo = new Date(Date.UTC(anio, mes + 1, 0)).getUTCDate();
+    const dia = Math.min(d, ultimo);
+    return `${anio}-${String(mes + 1).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+  };
+
+  let n = Math.max(1, (ha - a) * 12 + (hm - m));
+  while (fechaDe(n) < hoy) n += 1;
+
+  const anios = n / 12;
+  return {
+    fecha: fechaDe(n),
+    dias: diferenciaEnDias(hoy, fechaDe(n)),
+    meses: n,
+    etiqueta:
+      n % 12 === 0
+        ? `${anios} ${anios === 1 ? "año" : "años"} juntos`
+        : `${n} ${n === 1 ? "mes" : "meses"} juntos`,
+  };
+}

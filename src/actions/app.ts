@@ -271,7 +271,7 @@ export async function enviarAfirmacion(mensaje: string) {
       .string()
       .trim()
       .min(2, "Escribe un mensaje.")
-      .max(1000)
+      .max(2000)
       .parse(mensaje);
     return acuerdosModulo.enviarAfirmacion(
       ctx.userId,
@@ -295,7 +295,7 @@ export async function responderCheckin(respuestas: string[]) {
   return ejecutar((ctx) => {
     const pareja = exigirPareja(ctx);
     const datos = z
-      .array(z.string().trim().min(1, "Responde todas las preguntas.").max(2000))
+      .array(z.string().trim().min(1, "Responde todas las preguntas.").max(4000))
       .parse(respuestas);
     return checkinModulo.responderCheckin(
       ctx.userId,

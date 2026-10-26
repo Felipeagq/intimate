@@ -10,11 +10,22 @@ import { checkinDeLaSemana, avancePlan } from "@/server/modules/checkin";
 import { listarAcuerdos, listarAfirmaciones } from "@/server/modules/acuerdos";
 import { PLANTILLAS_ACUERDO } from "@/content/plan-noviazgo";
 import { formatDate } from "@/lib/utils";
+import { rachaDePareja } from "@/server/modules/oracion";
+import { fechaLocal, proximoHito } from "@/server/modules/fecha";
+import type { Seccion } from "./tipos";
 
 export const metadata = { title: "Pareja" };
 
-export default async function ParejaPage() {
+const SECCIONES: Seccion[] = ["resumen", "checkin", "plan", "acuerdos", "palabras"];
+
+export default async function ParejaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ seccion?: string }>;
+}) {
   const ctx = await contextoApp();
+  const { seccion } = await searchParams;
+  const seccionInicial = SECCIONES.find((s) => s === seccion) ?? "resumen";
 
   if (!ctx.pareja) {
     return (
@@ -34,7 +45,12 @@ export default async function ParejaPage() {
     );
   }
 
-  const [checkin, plan, acuerdos, afirmaciones] = await Promise.all([
+  const hito = proximoHito(
+    fechaLocal(ctx.zona, ctx.pareja.vinculadaEn),
+    fechaLocal(ctx.zona),
+  );
+
+  const [checkin, plan, acuerdos, afirmaciones, racha] = await Promise.all([
     checkinDeLaSemana(
       ctx.userId,
       ctx.pareja.coupleId,
@@ -44,6 +60,7 @@ export default async function ParejaPage() {
     avancePlan(ctx.userId, ctx.pareja.coupleId),
     listarAcuerdos(ctx.userId, ctx.pareja.coupleId),
     listarAfirmaciones(ctx.userId, ctx.pareja.coupleId),
+    rachaDePareja(ctx.pareja.coupleId, ctx.zona),
   ]);
 
   return (
@@ -66,7 +83,7 @@ export default async function ParejaPage() {
           day: "numeric",
           month: "long",
           year: "numeric",
-        })} · ${ctx.pareja.diasJuntos} ${ctx.pareja.diasJuntos === 1 ? "día" : "días"}`}
+        })}`}
       />
 
       <PanelPareja
@@ -98,6 +115,10 @@ export default async function ParejaPage() {
           confirmadoPorAmbos: a.confirmadoPorAmbos,
         }))}
         plantillas={PLANTILLAS_ACUERDO}
+        racha={racha}
+        diasJuntos={ctx.pareja.diasJuntos}
+        hito={{ dias: hito.dias, etiqueta: hito.etiqueta }}
+        seccionInicial={seccionInicial}
         afirmaciones={afirmaciones.map((a) => ({
           id: a.id,
           mensaje: a.mensaje,

@@ -25,7 +25,12 @@ import * as acuerdos from "../src/server/modules/acuerdos";
 import * as checkin from "../src/server/modules/checkin";
 import * as admin from "../src/server/modules/admin";
 import * as auditoria from "../src/server/modules/auditoria";
-import { calcularRacha, fechaLocal, sumarDias } from "../src/server/modules/fecha";
+import {
+  calcularRacha,
+  fechaLocal,
+  proximoHito,
+  sumarDias,
+} from "../src/server/modules/fecha";
 import {
   plantillaInvitacionEquipo,
   plantillaRespuestaSoporte,
@@ -442,6 +447,27 @@ async function main() {
     "y el devocional de hoy sigue contando",
     trasAtrasado.hoyRegistrado === true,
   );
+
+  console.log("\n— Próximo hito de la pareja —");
+  const h1 = proximoHito("2026-01-31", "2026-03-01");
+  comprobar(
+    "el 31 cae en el último día de un mes corto y sigue en marzo",
+    h1.fecha === "2026-03-31" && h1.dias === 30 && h1.etiqueta === "2 meses juntos",
+  );
+  const h2 = proximoHito("2026-01-15", "2026-03-15");
+  comprobar("el día del hito cuenta como hoy", h2.dias === 0 && h2.meses === 2);
+  const h3 = proximoHito("2025-10-26", "2026-10-20");
+  comprobar(
+    "al cumplir 12 meses se nombra en años",
+    h3.etiqueta === "1 año juntos" && h3.dias === 6,
+  );
+  const h4 = proximoHito("2026-10-26", "2026-10-26");
+  comprobar(
+    "recién vinculados, el primer hito es de un mes",
+    h4.fecha === "2026-11-26" && h4.etiqueta === "1 mes juntos",
+  );
+  const h5 = proximoHito("2026-01-31", "2026-02-10");
+  comprobar("el 31 de enero cae el 28 de febrero", h5.fecha === "2026-02-28");
 
   console.log("\n— Promesas —");
   await promesas.crearPromesa(ana.id, {
