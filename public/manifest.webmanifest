@@ -1,0 +1,43 @@
+{
+  "name": "Intimate — Un noviazgo con Dios en el centro",
+  "short_name": "Intimate",
+  "description": "Devocional en pareja, oración del uno por el otro y acuerdos escritos para novios cristianos.",
+  "id": "/",
+  "start_url": "/inicio",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f4f1",
+  "theme_color": "#f8f4f1",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["lifestyle", "education"],
+  "icons": [
+    { "src": "/icons/icon-96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "/icons/icon-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-256.png", "sizes": "256x256", "type": "image/png" },
+    { "src": "/icons/icon-384.png", "sizes": "384x384", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Devocional de hoy",
+      "short_name": "Devocional",
+      "url": "/devocional",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Hoy oré",
+      "short_name": "Oración",
+      "url": "/oracion",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

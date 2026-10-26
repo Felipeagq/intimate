@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Intimate — sistema de diseño
+   Marca: chocolate #433636 · beige #f8f4f1 · amarillo #ffeca9
+   Todos los pares de texto/fondo están validados a 4.5:1 o más.
+   ============================================================ */
+
+@theme {
+  --font-display: var(--font-inria), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+
+  /* Chocolate */
+  --color-ink-950: #1f1918;
+  --color-ink-900: #2b2322;
+  --color-ink-800: #362c2b;
+  --color-ink-700: #433636;
+  --color-ink-500: #6b5d5d;
+  --color-ink-300: #b5a7a1;
+  --color-ink-200: #c9bdb8;
+  --color-ink-100: #ded4cf;
+
+  /* Beige */
+  --color-cream-50: #fdfbf9;
+  --color-cream-100: #f8f4f1;
+  --color-cream-200: #efe7e0;
+  --color-cream-300: #e2d6cc;
+
+  /* Amarillo y dorado */
+  --color-honey-100: #fff7dd;
+  --color-honey-300: #ffeca9;
+  --color-honey-500: #e9c766;
+  --color-gold-700: #7d6316;
+  --color-gold-800: #665009;
+
+  --radius-glass: 1.25rem;
+
+  --shadow-glass:
+    0 8px 32px -8px rgb(67 54 54 / 0.18), 0 2px 8px -2px rgb(67 54 54 / 0.08);
+  --shadow-glass-lg:
+    0 24px 64px -16px rgb(67 54 54 / 0.24), 0 4px 12px -4px rgb(67 54 54 / 0.1);
+  --shadow-glow: 0 0 0 1px rgb(255 255 255 / 0.5) inset;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------- Tokens semánticos: modo claro ---------- */
+:root {
+  --bg-base: var(--color-cream-100);
+  --fg-base: var(--color-ink-700);
+  --fg-muted: var(--color-ink-500);
+  --fg-accent: var(--color-gold-700);
+
+  --glass-bg: rgb(255 255 255 / 0.72);
+  --glass-bg-strong: rgb(255 255 255 / 0.86);
+  --glass-border: rgb(255 255 255 / 0.75);
+  --glass-ring: rgb(67 54 54 / 0.07);
+  --glass-shadow: var(--shadow-glass);
+
+  --aurora-1: rgb(255 236 169 / 0.75);
+  --aurora-2: rgb(240 212 184 / 0.7);
+  --aurora-3: rgb(226 214 204 / 0.8);
+  --aurora-4: rgb(233 199 102 / 0.35);
+
+  color-scheme: light;
+}
+
+/* ---------- Tokens semánticos: modo oscuro ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-base: var(--color-ink-950);
+    --fg-base: var(--color-cream-100);
+    --fg-muted: var(--color-ink-200);
+    --fg-accent: var(--color-honey-300);
+
+    --glass-bg: rgb(255 255 255 / 0.07);
+    --glass-bg-strong: rgb(255 255 255 / 0.11);
+    --glass-border: rgb(255 255 255 / 0.14);
+    --glass-ring: rgb(0 0 0 / 0.3);
+    --glass-shadow: 0 8px 32px -8px rgb(0 0 0 / 0.5);
+
+    --aurora-1: rgb(125 99 22 / 0.5);
+    --aurora-2: rgb(67 54 54 / 0.9);
+    --aurora-3: rgb(43 35 34 / 0.9);
+    --aurora-4: rgb(233 199 102 / 0.14);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg-base: var(--color-ink-950);
+  --fg-base: var(--color-cream-100);
+  --fg-muted: var(--color-ink-200);
+  --fg-accent: var(--color-honey-300);
+
+  --glass-bg: rgb(255 255 255 / 0.07);
+  --glass-bg-strong: rgb(255 255 255 / 0.11);
+  --glass-border: rgb(255 255 255 / 0.14);
+  --glass-ring: rgb(0 0 0 / 0.3);
+  --glass-shadow: 0 8px 32px -8px rgb(0 0 0 / 0.5);
+
+  --aurora-1: rgb(125 99 22 / 0.5);
+  --aurora-2: rgb(67 54 54 / 0.9);
+  --aurora-3: rgb(43 35 34 / 0.9);
+  --aurora-4: rgb(233 199 102 / 0.14);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--bg-base);
+  --color-foreground: var(--fg-base);
+  --color-muted: var(--fg-muted);
+  --color-accent: var(--fg-accent);
+}
+
+/* ---------- Base ---------- */
+@layer base {
+  * {
+    border-color: var(--glass-border);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--fg-base);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Barra inferior fija en móvil: deja espacio seguro. */
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Foco visible en todo elemento interactivo (regla crítica de a11y). */
+  :focus-visible {
+    outline: 2px solid var(--fg-accent);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+
+  ::selection {
+    background: var(--color-honey-300);
+    color: var(--color-ink-700);
+  }
+}
+
+/* ---------- Componentes ---------- */
+@layer components {
+  /* Fondo aurora: el glassmorphism necesita algo vibrante detrás
+     o el desenfoque no se percibe. */
+  .aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    overflow: hidden;
+    background-color: var(--bg-base);
+    pointer-events: none;
+  }
+
+  .aurora::before,
+  .aurora::after {
+    content: "";
+    position: absolute;
+    inset: -25%;
+    background-repeat: no-repeat;
+  }
+
+  .aurora::before {
+    background-image:
+      radial-gradient(
+        42rem 42rem at 12% 14%,
+        var(--aurora-1) 0%,
+        transparent 65%
+      ),
+      radial-gradient(
+        38rem 38rem at 88% 8%,
+        var(--aurora-2) 0%,
+        transparent 62%
+      );
+  }
+
+  .aurora::after {
+    background-image:
+      radial-gradient(
+        46rem 46rem at 78% 82%,
+        var(--aurora-3) 0%,
+        transparent 64%
+      ),
+      radial-gradient(
+        30rem 30rem at 24% 92%,
+        var(--aurora-4) 0%,
+        transparent 60%
+      );
+  }
+
+  /* Superficie de vidrio. En claro va al 72 % de opacidad, no al 10 %:
+     por debajo de ~60 % el texto deja de cumplir contraste. */
+  .glass {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow), 0 0 0 1px var(--glass-ring);
+    border-radius: var(--radius-glass);
+  }
+
+  .glass-strong {
+    background-color: var(--glass-bg-strong);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass-lg), 0 0 0 1px var(--glass-ring);
+    border-radius: var(--radius-glass);
+  }
+
+  /* Vidrio sin desenfoque, para zonas densas de datos del panel admin
+     donde el blur estorba la lectura. */
+  .panel {
+    background-color: var(--glass-bg-strong);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: var(--radius-glass);
+  }
+
+  .glass-hover {
+    transition:
+      background-color 200ms var(--ease-out-soft),
+      box-shadow 200ms var(--ease-out-soft),
+      border-color 200ms var(--ease-out-soft);
+  }
+
+  .glass-hover:hover {
+    background-color: var(--glass-bg-strong);
+    box-shadow: var(--shadow-glass-lg), 0 0 0 1px var(--glass-ring);
+  }
+}
+
+/* ---------- Movimiento ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: rise 500ms var(--ease-out-soft) both;
+}
