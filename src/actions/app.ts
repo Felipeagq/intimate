@@ -137,6 +137,8 @@ export async function desvincular() {
 
 // ------------------------------------------------------------- Devocional
 
+const RUTAS_DEVOCIONAL = ["/devocional", "/devocional/historial", "/inicio"];
+
 const esquemaDevocionalPareja = z.object({
   pasaje: z.string().trim().min(2, "Escribe el pasaje.").max(120),
   titulo: z.string().trim().max(120).optional(),
@@ -146,16 +148,19 @@ const esquemaDevocionalPareja = z.object({
 export async function crearDevocionalDePareja(
   entrada: z.input<typeof esquemaDevocionalPareja>,
 ) {
-  return ejecutar((ctx) => {
+  return ejecutar(async (ctx) => {
     const pareja = exigirPareja(ctx);
     const datos = esquemaDevocionalPareja.parse(entrada);
-    return devocionalModulo.crearDevocionalDePareja(
+    const fila = await devocionalModulo.crearDevocionalDePareja(
       ctx.userId,
       pareja.coupleId,
       ctx.zona,
       datos,
     );
-  }, ["/devocional", "/inicio"]);
+    // Solo el id: la pantalla navega al devocional recién creado y la fila
+    // completa no le hace falta.
+    return { id: fila.id };
+  }, RUTAS_DEVOCIONAL);
 }
 
 export async function guardarRespuestaDevocional(
@@ -175,10 +180,13 @@ export async function guardarRespuestaDevocional(
       texto,
       ctx.zona,
     );
-  }, ["/devocional", "/inicio"]);
+  }, RUTAS_DEVOCIONAL);
 }
 
 const esquemaSoap = z.object({
+  // Con id edita ese devocional; sin id continúa el de hoy o lo crea. El
+  // módulo comprueba que el id sea de esta persona.
+  id: z.string().uuid().optional(),
   pasaje: z.string().trim().min(2, "Escribe el pasaje.").max(120),
   textoPasaje: z.string().trim().max(4000).optional(),
   observacion: z.string().trim().max(4000).optional(),
@@ -190,14 +198,39 @@ const esquemaSoap = z.object({
 export async function guardarDevocionalPersonal(
   entrada: z.input<typeof esquemaSoap>,
 ) {
-  return ejecutar((ctx) => {
-    const datos = esquemaSoap.parse(entrada);
-    return devocionalModulo.guardarDevocionalPersonal(
+  return ejecutar(
+    async (ctx) => {
+      const datos = esquemaSoap.parse(entrada);
+      const fila = await devocionalModulo.guardarDevocionalPersonal(
+        ctx.userId,
+        ctx.zona,
+        datos,
+      );
+      // La pantalla se queda con el id para que los guardados siguientes
+      // editen este devocional en lugar de crear otro.
+      return { id: fila.id };
+    },
+    [...RUTAS_DEVOCIONAL, "/oracion"],
+  );
+}
+
+const esquemaDevocionalNuevo = z.object({
+  pasaje: z.string().trim().min(2, "Escribe el pasaje.").max(120),
+  textoPasaje: z.string().trim().max(4000).optional(),
+});
+
+export async function crearDevocionalPersonal(
+  entrada: z.input<typeof esquemaDevocionalNuevo>,
+) {
+  return ejecutar(async (ctx) => {
+    const datos = esquemaDevocionalNuevo.parse(entrada);
+    const fila = await devocionalModulo.crearDevocionalPersonal(
       ctx.userId,
       ctx.zona,
       datos,
     );
-  }, ["/devocional", "/inicio", "/oracion"]);
+    return { id: fila.id };
+  }, RUTAS_DEVOCIONAL);
 }
 
 // ---------------------------------------------------------------- Acuerdos

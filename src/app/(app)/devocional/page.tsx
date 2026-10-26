@@ -30,6 +30,7 @@ export default async function DevocionalPage() {
       personal={
         personal
           ? {
+              id: personal.id,
               pasaje: personal.pasaje,
               textoPasaje: personal.textoPasaje,
               observacion: personal.observacion,

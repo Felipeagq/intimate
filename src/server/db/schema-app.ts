@@ -97,6 +97,10 @@ export const devotionals = pgTable(
   (t) => [
     index("devotionals_autor_idx").on(t.autorId),
     index("devotionals_couple_idx").on(t.coupleId),
+    // Un devocional de pareja por día. Los personales no entran: tienen
+    // couple_id nulo y Postgres cuenta cada nulo como distinto, así que se
+    // pueden tener varios el mismo día.
+    unique("devotionals_pareja_dia").on(t.coupleId, t.fechaLocal),
   ],
 );
 

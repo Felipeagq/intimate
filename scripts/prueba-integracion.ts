@@ -15,7 +15,7 @@ import { eq, ilike, inArray } from "drizzle-orm";
 import { auth } from "../src/server/auth";
 import { db } from "../src/server/db/client";
 import { user } from "../src/server/db/schema";
-import { couples } from "../src/server/db/schema-app";
+import { couples, devotionals } from "../src/server/db/schema-app";
 import { auditEvents } from "../src/server/db/schema-audit";
 import * as pareja from "../src/server/modules/pareja";
 import * as oracion from "../src/server/modules/oracion";
@@ -25,7 +25,7 @@ import * as acuerdos from "../src/server/modules/acuerdos";
 import * as checkin from "../src/server/modules/checkin";
 import * as admin from "../src/server/modules/admin";
 import * as auditoria from "../src/server/modules/auditoria";
-import { calcularRacha, fechaLocal } from "../src/server/modules/fecha";
+import { calcularRacha, fechaLocal, sumarDias } from "../src/server/modules/fecha";
 import {
   plantillaInvitacionEquipo,
   plantillaRespuestaSoporte,
@@ -42,6 +42,8 @@ const ZONA = "America/Bogota";
 const CORREOS = [
   "ana.integracion@ejemplo-intimate.test",
   "beto.integracion@ejemplo-intimate.test",
+  "ajeno.integracion@ejemplo-intimate.test",
+  "intruso@ejemplo-intimate.test",
 ];
 
 let fallos = 0;
@@ -259,7 +261,7 @@ async function main() {
   const coupleId = vinculo!.coupleId;
 
   console.log("\n— Aislamiento entre parejas —");
-  const intruso = await crearUsuario("intruso@ejemplo-intimate.test");
+  const intruso = await crearUsuario(CORREOS[3]);
   let bloqueado = false;
   try {
     await acuerdos.listarAcuerdos(intruso.id, coupleId);
@@ -303,6 +305,143 @@ async function main() {
 
   const rachaPareja = await oracion.rachaDePareja(coupleId, ZONA);
   comprobar("la racha de pareja es 1: los dos oraron", rachaPareja === 1);
+
+  console.log("\n— Historial de devocionales —");
+  const p1 = await devocional.crearDevocionalPersonal(ana.id, ZONA, {
+    pasaje: "Salmo 23",
+  });
+  const p2 = await devocional.crearDevocionalPersonal(ana.id, ZONA, {
+    pasaje: "Juan 15",
+  });
+  comprobar("caben varios devocionales personales el mismo día", p1.id !== p2.id);
+
+  const historial = await devocional.listarDevocionales(ana.id, coupleId);
+  comprobar(
+    "el historial trae los personales y el de pareja",
+    historial.some((i) => i.id === p1.id && i.tipo === "personal") &&
+      historial.some((i) => i.id === p2.id && i.tipo === "personal") &&
+      historial.some((i) => i.id === dev.id && i.tipo === "pareja"),
+  );
+  comprobar(
+    "ordenado de lo más reciente a lo más viejo",
+    historial.every((i, n) => n === 0 || historial[n - 1].fechaLocal >= i.fechaLocal),
+  );
+  comprobar(
+    "el historial no lleva NINGÚN texto escrito, ni propio ni de la pareja",
+    historial.every(
+      (i) =>
+        !("miRespuesta" in i) &&
+        !("respuestaPareja" in i) &&
+        !("observacion" in i) &&
+        !("oracion" in i),
+    ),
+  );
+  comprobar(
+    "marca el de pareja como terminado porque los dos escribieron",
+    historial.find((i) => i.id === dev.id)?.completado === true,
+  );
+
+  const soloPersonales = await devocional.listarDevocionales(ana.id, coupleId, {
+    tipo: "personal",
+  });
+  comprobar(
+    "el filtro Personales no mezcla los de pareja",
+    soloPersonales.length >= 2 &&
+      soloPersonales.every((i) => i.tipo === "personal"),
+  );
+  const soloPareja = await devocional.listarDevocionales(ana.id, coupleId, {
+    tipo: "pareja",
+  });
+  comprobar(
+    "el filtro En pareja no mezcla los personales",
+    soloPareja.length === 1 && soloPareja[0].id === dev.id,
+  );
+  comprobar(
+    "sin pareja, el filtro En pareja viene vacío",
+    (await devocional.listarDevocionales(ana.id, null, { tipo: "pareja" }))
+      .length === 0,
+  );
+  comprobar(
+    "el historial de Beto no incluye los devocionales personales de Ana",
+    (await devocional.listarDevocionales(beto.id, coupleId)).every(
+      (i) => i.id !== p1.id && i.id !== p2.id,
+    ),
+  );
+
+  const detallePersonal = await devocional.obtenerDevocional(ana.id, p1.id);
+  comprobar(
+    "Ana abre su devocional personal por id",
+    detallePersonal?.tipo === "personal" &&
+      detallePersonal.personal.pasaje === "Salmo 23",
+  );
+  comprobar(
+    "el devocional personal de Ana no existe para Beto",
+    (await devocional.obtenerDevocional(beto.id, p1.id)) === null,
+  );
+  const detallePareja = await devocional.obtenerDevocional(beto.id, dev.id);
+  comprobar(
+    "los dos pueden abrir el de pareja por id",
+    detallePareja?.tipo === "pareja",
+  );
+  comprobar(
+    "y con los dos escritos, el detalle entrega la respuesta del otro",
+    detallePareja?.tipo === "pareja" &&
+      detallePareja.pareja.revelado &&
+      detallePareja.pareja.respuestaPareja === "Lo que Dios me dijo a mí.",
+  );
+
+  const ajeno = await crearUsuario(CORREOS[2]);
+  comprobar(
+    "un tercero no encuentra el devocional de esa pareja",
+    (await devocional.obtenerDevocional(ajeno.id, dev.id)) === null,
+  );
+  let noEditable = false;
+  try {
+    await devocional.guardarDevocionalPersonal(ajeno.id, ZONA, {
+      id: p1.id,
+      pasaje: "Salmo 23",
+    });
+  } catch {
+    noEditable = true;
+  }
+  comprobar("ni puede editar un devocional personal ajeno", noEditable);
+  await db.delete(user).where(eq(user.id, ajeno.id));
+
+  let repetido = false;
+  try {
+    await devocional.crearDevocionalDePareja(beto.id, coupleId, ZONA, {
+      pasaje: "Salmo 1",
+    });
+  } catch {
+    repetido = true;
+  }
+  comprobar("el devocional de pareja sigue siendo uno al día", repetido);
+
+  // Terminar uno de otro día no puede rellenar la racha hacia atrás.
+  const [atrasado] = await db
+    .insert(devotionals)
+    .values({
+      autorId: ana.id,
+      scope: "personal",
+      fechaLocal: sumarDias(fechaLocal(ZONA), -1),
+      pasaje: "Salmo 1",
+    })
+    .returning();
+  await devocional.guardarDevocionalPersonal(ana.id, ZONA, {
+    id: atrasado.id,
+    pasaje: "Salmo 1",
+    oracion: "Gracias por lo de ayer.",
+    completado: true,
+  });
+  const trasAtrasado = await oracion.obtenerMetricas(ana.id, ZONA);
+  comprobar(
+    "terminar un devocional de otro día no infla la racha",
+    trasAtrasado.racha === 1,
+  );
+  comprobar(
+    "y el devocional de hoy sigue contando",
+    trasAtrasado.hoyRegistrado === true,
+  );
 
   console.log("\n— Promesas —");
   await promesas.crearPromesa(ana.id, {

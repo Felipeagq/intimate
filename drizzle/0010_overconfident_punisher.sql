@@ -1,0 +1,1 @@
+ALTER TABLE "devotionals" ADD CONSTRAINT "devotionals_pareja_dia" UNIQUE("couple_id","fecha_local");
