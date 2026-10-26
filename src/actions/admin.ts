@@ -4,10 +4,11 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requerirAdmin, type SesionAdmin } from "@/server/admin-session";
-import { registrarEvento } from "@/server/modules/auditoria";
+import { registrarEvento, registrarLecturaUnica } from "@/server/modules/auditoria";
 import * as adminModulo from "@/server/modules/admin";
 import { desvincular, obtenerPareja } from "@/server/modules/pareja";
 import * as equipoModulo from "@/server/modules/equipo";
+import * as soporteModulo from "@/server/modules/soporte";
 import { ROLES, type Rol } from "@/server/auth-admin";
 
 export type Resultado = { ok: true } | { ok: false; error: string };
@@ -85,17 +86,27 @@ export async function cambiarEstadoCuenta(
 }
 
 /**
- * Deja constancia de que alguien del equipo consultó una cuenta ajena.
- * Se llama desde la vista de detalle en cada carga, así cada mirada queda
- * registrada, no solo las acciones que modifican algo.
+ * Deja constancia de que alguien del equipo miró algo ajeno. Una vez por
+ * ventana de cinco minutos: ver `registrarLecturaUnica`.
  */
+async function registrarLectura(accion: string, objetivo: string) {
+  const sesion = await requerirAdmin(["admin", "soporte"]);
+  await registrarLecturaUnica({
+    actor: sesion.email,
+    rol: sesion.rol,
+    accion,
+    objetivo,
+    ip: await ipDeLaPeticion(),
+  });
+}
+
 export async function registrarConsulta(email: string) {
-  return ejecutarConAuditoria(
-    ["admin", "soporte"],
-    "cuenta.consultar",
-    email,
-    async () => {},
-  );
+  await registrarLectura("cuenta.consultar", email);
+}
+
+/** Leer un mensaje de soporte también es mirar algo que la persona escribió. */
+export async function registrarLecturaMensaje(email: string) {
+  await registrarLectura("soporte.mensaje_leido", email);
 }
 
 /**
@@ -155,5 +166,61 @@ export async function revocarInvitacionEquipo(inviteId: string) {
     inviteId,
     () => equipoModulo.revocarInvitacion(inviteId),
     ["/admin/configuracion"],
+  );
+}
+
+// ------------------------------------------------------------------ Bandeja
+
+const esquemaEstadoMensaje = z.enum(["nuevo", "en_curso", "resuelto"]);
+
+/** Las acciones sobre la bandeja las pueden hacer admin y soporte. */
+const ROLES_BANDEJA: ("admin" | "soporte")[] = ["admin", "soporte"];
+
+function rutasMensaje(id: string) {
+  return ["/admin/bandeja", `/admin/bandeja/${id}`];
+}
+
+export async function cambiarEstadoMensaje(
+  id: string,
+  estado: z.infer<typeof esquemaEstadoMensaje>,
+) {
+  const validado = esquemaEstadoMensaje.parse(estado);
+  return ejecutarConAuditoria(
+    ROLES_BANDEJA,
+    `soporte.mensaje_${validado}`,
+    null,
+    () => soporteModulo.cambiarEstadoTicket(id, validado),
+    rutasMensaje(id),
+  );
+}
+
+export async function asignarMensaje(id: string, tomarlo: boolean) {
+  return ejecutarConAuditoria(
+    ROLES_BANDEJA,
+    tomarlo ? "soporte.mensaje_tomado" : "soporte.mensaje_soltado",
+    null,
+    (sesion) => soporteModulo.asignarTicket(id, tomarlo ? sesion.email : null),
+    rutasMensaje(id),
+  );
+}
+
+/** La nota queda en el mensaje; en auditoría solo consta que se escribió. */
+export async function agregarNotaMensaje(id: string, contenido: string) {
+  return ejecutarConAuditoria(
+    ROLES_BANDEJA,
+    "soporte.nota",
+    null,
+    (sesion) => soporteModulo.agregarNota(id, sesion.email, contenido),
+    rutasMensaje(id),
+  );
+}
+
+export async function responderMensaje(id: string, respuesta: string) {
+  return ejecutarConAuditoria(
+    ROLES_BANDEJA,
+    "soporte.respuesta",
+    null,
+    (sesion) => soporteModulo.responderTicket(id, sesion.email, respuesta),
+    rutasMensaje(id),
   );
 }

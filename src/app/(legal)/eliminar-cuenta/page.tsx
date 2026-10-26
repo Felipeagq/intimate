@@ -43,11 +43,10 @@ export default function EliminarCuentaPage() {
 
       <h2>Si no puedes entrar</h2>
       <p>
-        Escríbenos desde el correo de tu cuenta a{" "}
-        <a href="mailto:hola@intimate.app" className="text-accent underline">
-          hola@intimate.app
-        </a>{" "}
-        y lo hacemos por ti.
+        <Link href="/ayuda" className="text-accent underline">
+          Escríbele al equipo
+        </Link>{" "}
+        y lo hacemos por ti. Elige “Quiero eliminar mi cuenta”.
       </p>
     </>
   );

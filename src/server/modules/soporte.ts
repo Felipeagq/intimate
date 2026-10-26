@@ -38,6 +38,13 @@ export const LARGO_MENSAJE = { min: 10, max: 4000 } as const;
 const MAX_POR_CORREO_AL_DIA = 3;
 const MAX_GLOBAL_POR_HORA = 60;
 
+/** Valida y, si falla, lanza el primer mensaje en español, no un JSON de zod. */
+function validar<T>(esquema: z.ZodType<T>, valor: unknown): T {
+  const r = esquema.safeParse(valor);
+  if (!r.success) throw new Error(r.error.issues[0]?.message ?? "Datos inválidos.");
+  return r.data;
+}
+
 const esquemaTicket = z.object({
   email: z.string().trim().toLowerCase().email("Escribe un correo válido.").max(200),
   categoria: z.enum(CATEGORIAS_CLAVES),
@@ -55,7 +62,7 @@ export async function crearTicket(entrada: {
   verificado: boolean;
   userId?: string | null;
 }) {
-  const datos = esquemaTicket.parse(entrada);
+  const datos = validar(esquemaTicket, entrada);
 
   const haceUnDia = new Date(Date.now() - 86_400_000);
   const haceUnaHora = new Date(Date.now() - 3_600_000);
@@ -233,7 +240,10 @@ export async function asignarTicket(id: string, asignadoA: string | null) {
 
 export async function agregarNota(id: string, autor: string, contenido: string) {
   const ticket = await existe(id);
-  const texto = z.string().trim().min(1, "Escribe algo.").max(2000).parse(contenido);
+  const texto = validar(
+    z.string().trim().min(1, "Escribe algo.").max(2000, "La nota es demasiado larga."),
+    contenido,
+  );
 
   await db
     .insert(supportNotes)
@@ -253,7 +263,10 @@ export async function agregarNota(id: string, autor: string, contenido: string) 
  */
 export async function responderTicket(id: string, autor: string, respuesta: string) {
   const ticket = await existe(id);
-  const texto = z.string().trim().min(1, "Escribe la respuesta.").max(4000).parse(respuesta);
+  const texto = validar(
+    z.string().trim().min(1, "Escribe la respuesta.").max(4000, "La respuesta es demasiado larga."),
+    respuesta,
+  );
 
   const { texto: plano, html } = plantillaRespuestaSoporte({
     respuesta: texto,

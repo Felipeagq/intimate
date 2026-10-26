@@ -21,8 +21,14 @@ export default function PrivacidadPage() {
           pertenece al espacio de pareja.
         </li>
         <li>
-          Nadie de nuestro equipo. Los textos libres están cifrados por campo y
-          el panel de administración no tiene permiso para descifrarlos.
+          Nadie de nuestro equipo. El panel de administración no puede mostrar
+          lo que escribes en la app.
+        </li>
+        <li>
+          La única excepción son los mensajes que tú mismo le envías al equipo
+          de soporte, desde Ajustes o desde la página de ayuda. Esos sí los
+          leemos, porque es la forma de poder ayudarte. Nunca les adjuntamos
+          nada de lo que hayas escrito en la app.
         </li>
       </ul>
 

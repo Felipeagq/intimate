@@ -1,4 +1,4 @@
-import { and, desc, gte, ilike, lte } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, lte } from "drizzle-orm";
 import { db } from "../db/client";
 import { auditEvents } from "../db/schema-audit";
 
@@ -68,4 +68,30 @@ export async function listarEventos(filtro: FiltroEventos = {}) {
 /** Eventos sobre una cuenta concreta, para su vista de detalle en soporte. */
 export async function eventosDeCuenta(email: string, limite = 30) {
   return listarEventos({ objetivoContiene: email, limite });
+}
+
+/**
+ * Registra una LECTURA una sola vez por ventana de tiempo.
+ *
+ * Mirar una cuenta o un mensaje tiene que quedar registrado, pero cada acción
+ * del panel recarga la página, y sin esto un solo mensaje trabajado dejaría
+ * una docena de líneas idénticas que tapan lo importante. Dentro de la
+ * ventana, la misma persona mirando lo mismo cuenta como una sola mirada.
+ */
+export async function registrarLecturaUnica(
+  evento: Evento,
+  ventanaMs = 5 * 60_000,
+) {
+  const desde = new Date(Date.now() - ventanaMs);
+
+  const reciente = await db.query.auditEvents.findFirst({
+    where: and(
+      eq(auditEvents.actor, evento.actor),
+      eq(auditEvents.accion, evento.accion),
+      evento.objetivo ? eq(auditEvents.objetivo, evento.objetivo) : undefined,
+      gte(auditEvents.createdAt, desde),
+    ),
+  });
+
+  if (!reciente) await registrarEvento(evento);
 }

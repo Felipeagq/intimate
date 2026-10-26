@@ -110,9 +110,18 @@ async function main() {
   console.log("\n— Lectura —");
   const abiertos = await soporte.listarTickets("abiertos");
   const idxUrgente = abiertos.findIndex((t) => t.id === urgente.id);
-  const idxNormal = abiertos.findIndex((t) => t.id === normal.id);
-  comprobar("los abiertos incluyen ambos", idxUrgente >= 0 && idxNormal >= 0);
-  comprobar("el urgente va antes que el normal, aunque sea más viejo en la lista", idxUrgente < idxNormal);
+  // Este normal se creó DESPUÉS del urgente: ordenar solo por fecha lo
+  // pondría primero. Que el urgente aun así vaya arriba demuestra la regla.
+  const idxMasNuevo = abiertos.findIndex((t) => t.id === publicoConCuenta.id);
+  comprobar("los abiertos incluyen ambos", idxUrgente >= 0 && idxMasNuevo >= 0);
+  comprobar(
+    "la premisa de la prueba: el normal es más nuevo que el urgente",
+    t3.createdAt > t2.createdAt,
+  );
+  comprobar(
+    "el urgente va arriba aunque haya un mensaje normal más reciente",
+    idxUrgente < idxMasNuevo,
+  );
 
   const pendientes = await soporte.contarPendientes();
   comprobar("cuenta los nuevos", pendientes.nuevos >= 4);

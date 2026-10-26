@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { AdminNav } from "@/components/admin-nav";
+import { AdminMenuMovil } from "@/components/admin-menu-movil";
 import { LogoMark } from "@/components/brand/logo";
 import { Badge } from "@/components/ui/badge";
 import { CerrarSesionAdmin } from "@/components/cerrar-sesion-admin";
 import { requerirAdmin } from "@/server/admin-session";
+import { contarPendientes } from "@/server/modules/soporte";
 
 const tonoRol = { admin: "honey", soporte: "info", lectura: "neutral" } as const;
 
@@ -14,6 +16,11 @@ export default async function PanelLayout({
 }) {
   // Verificación real: sesión válida, segundo factor activo y rol conocido.
   const sesion = await requerirAdmin();
+
+  // Mensajes nuevos en la bandeja, para el contador del menú. El rol lectura
+  // no ve la bandeja, así que a ese rol ni se le consulta.
+  const { nuevos } =
+    sesion.rol === "lectura" ? { nuevos: 0 } : await contarPendientes();
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-7xl gap-6 px-3 sm:px-4">
@@ -30,7 +37,7 @@ export default async function PanelLayout({
             </Badge>
           </Link>
 
-          <AdminNav rol={sesion.rol} />
+          <AdminNav rol={sesion.rol} nuevos={nuevos} />
 
           <div className="panel p-4">
             <p className="text-muted text-xs">Sesión</p>
@@ -43,10 +50,8 @@ export default async function PanelLayout({
         </div>
       </aside>
 
-      <div className="min-w-0 flex-1 py-6">
-        <div className="mb-4 md:hidden">
-          <AdminNav rol={sesion.rol} horizontal />
-        </div>
+      <div className="min-w-0 flex-1 pb-6 md:py-6">
+        <AdminMenuMovil rol={sesion.rol} email={sesion.email} nuevos={nuevos} />
         <main>{children}</main>
       </div>
     </div>

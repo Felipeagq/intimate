@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MailWarning, ShieldCheck } from "lucide-react";
+import { MailWarning, ShieldAlert, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { TarjetaMetrica } from "./tarjeta-metrica";
 import { PageHeader } from "@/components/ui/page-header";
@@ -14,6 +14,7 @@ import {
   desgloseModulos,
 } from "@/server/modules/admin";
 import { resumenCorreos } from "@/server/modules/sistema";
+import { contarPendientes } from "@/server/modules/soporte";
 import {
   DesgloseModulos,
   DistribucionRachas,
@@ -25,9 +26,9 @@ import { cn, formatDate } from "@/lib/utils";
 export const metadata = { title: "Dashboard" };
 
 export default async function AdminDashboard() {
-  await requerirAdmin();
+  const sesion = await requerirAdmin();
 
-  const [metricas, serie, activos7, rachas, cohortes, modulos, correos] =
+  const [metricas, serie, activos7, rachas, cohortes, modulos, correos, bandeja] =
     await Promise.all([
       obtenerMetricas(),
       serieParejasActivas(),
@@ -36,6 +37,10 @@ export default async function AdminDashboard() {
       retencionPorCohorte(),
       desgloseModulos(),
       resumenCorreos(7),
+      // El rol lectura no ve la bandeja: tampoco se le avisa de ella.
+      sesion.rol === "lectura"
+        ? Promise.resolve({ nuevos: 0, urgentes: 0 })
+        : contarPendientes(),
     ]);
 
   // El embudo reutiliza la distribución ya calculada en lugar de recorrer
@@ -73,8 +78,31 @@ export default async function AdminDashboard() {
       <PageHeader
         eyebrow="Panel"
         title="Dashboard"
-        description="Solo datos agregados. Ninguna pantalla del panel muestra contenido escrito por un usuario."
+        description="Solo datos agregados. El panel no muestra devocionales, promesas, peticiones ni nada de lo que la gente escribe en la app. La única excepción son los mensajes que alguien le envía al equipo, en la Bandeja."
       />
+
+      {/* Un reporte de abuso sin atender es lo más grave que puede esperar en
+          este panel, así que sale arriba de todo. */}
+      {bandeja.urgentes > 0 && (
+        <Link
+          href="/admin/bandeja"
+          className="mb-4 flex cursor-pointer items-start gap-3 rounded-2xl bg-red-600/14 p-4 transition-colors duration-200 hover:bg-red-600/22"
+        >
+          <ShieldAlert
+            className="mt-0.5 size-5 shrink-0 text-red-800 dark:text-red-300"
+            aria-hidden
+          />
+          <span className="text-sm leading-relaxed">
+            <strong className="font-medium">
+              {bandeja.urgentes}{" "}
+              {bandeja.urgentes === 1
+                ? "reporte urgente sin resolver"
+                : "reportes urgentes sin resolver"}
+            </strong>
+            . Alguien pidió ayuda o reportó un abuso. Abrir la bandeja →
+          </span>
+        </Link>
+      )}
 
       {/* Un fallo de correo es silencioso para el usuario: no llega su código
           y no sabe por qué. Se avisa aquí para no depender de que alguien

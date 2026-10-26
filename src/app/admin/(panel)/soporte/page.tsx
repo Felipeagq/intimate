@@ -23,7 +23,7 @@ export default async function SoportePage({
       <PageHeader
         eyebrow="Panel"
         title="Soporte"
-        description="Busca una cuenta por correo para ayudar a un usuario. Se ve su estado, nunca lo que escribió."
+        description="Busca una cuenta por correo para ayudar a un usuario. Se ve su estado, nunca lo que escribió en la app. Los mensajes que envía al equipo están en la Bandeja."
       />
 
       {cuentas.length === 0 && !q ? (

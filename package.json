@@ -17,7 +17,8 @@
     "test:integracion": "CORREO_DESACTIVADO=1 tsx --env-file=.env scripts/prueba-integracion.ts",
     "test:invitacion": "CORREO_DESACTIVADO=1 tsx --env-file=.env scripts/prueba-invitacion-equipo.ts",
     "test:biblia": "tsx --env-file=.env scripts/prueba-biblia.ts",
-    "test:sistema": "tsx --env-file=.env scripts/prueba-sistema.ts"
+    "test:sistema": "tsx --env-file=.env scripts/prueba-sistema.ts",
+    "test:soporte": "CORREO_DESACTIVADO=1 tsx --env-file=.env scripts/prueba-soporte.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1156.0",

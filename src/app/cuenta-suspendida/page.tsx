@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Card } from "@/components/ui/card";
@@ -19,11 +20,11 @@ export default function CuentaSuspendidaPage() {
             ha borrado nada.
           </p>
           <p className="text-muted mt-4 text-sm leading-relaxed">
-            Si crees que es un error, escríbenos a{" "}
-            <a href="mailto:hola@intimate.app" className="text-accent underline">
-              hola@intimate.app
-            </a>{" "}
-            desde el correo de tu cuenta.
+            Si crees que es un error,{" "}
+            <Link href="/ayuda" className="text-accent underline">
+              escríbele al equipo
+            </Link>
+            . No necesitas tener la sesión abierta.
           </p>
         </Card>
       </div>

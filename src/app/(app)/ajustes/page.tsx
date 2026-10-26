@@ -1,4 +1,4 @@
-import { Bell, Fingerprint, Mail, Download } from "lucide-react";
+import { Bell, Fingerprint, LifeBuoy, Mail, Download } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -6,6 +6,7 @@ import { CerrarSesion } from "./cerrar-sesion";
 import { SubirFoto } from "@/components/subir-foto";
 import { EditarPerfil } from "./editar-perfil";
 import { SelectorZona } from "./selector-zona";
+import { PedirAyuda } from "@/components/pedir-ayuda";
 import { ZonaDelicada } from "./zona-delicada";
 import { contextoApp } from "@/server/session";
 import { desfaseDe, listarZonas } from "@/server/modules/zona";
@@ -96,6 +97,18 @@ export default async function AjustesPage() {
             <Download className="size-4" aria-hidden />
             Exportar mis datos
           </Button>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center gap-2">
+            <LifeBuoy className="text-accent size-5" aria-hidden />
+            <h2 className="text-xl">¿Necesitas ayuda?</h2>
+          </div>
+          <p className="text-muted mt-2 mb-5 text-sm leading-relaxed">
+            Para una duda, un problema, o para reportar algo que te preocupa
+            de tu relación o de la app.
+          </p>
+          <PedirAyuda modo="sesion" emailCuenta={ctx.email} />
         </Card>
 
         <ZonaDelicada
