@@ -13,7 +13,8 @@
     "db:inspect": "tsx --env-file=.env scripts/inspeccionar-db.ts",
     "db:limpiar": "tsx --env-file=.env scripts/limpiar-datos-prueba.ts",
     "email:probar": "tsx --env-file=.env scripts/probar-correo.ts",
-    "build:check": "NEXT_DIST_DIR=.next-build next build"
+    "build:check": "NEXT_DIST_DIR=.next-build next build",
+    "test:integracion": "tsx --env-file=.env scripts/prueba-integracion.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",

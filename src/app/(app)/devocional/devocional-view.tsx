@@ -1,44 +1,65 @@
 "use client";
 
-import { useState } from "react";
-import { Check, EyeOff, Lock, Save } from "lucide-react";
+import { useState, useTransition } from "react";
+import {
+  AlertCircle,
+  Check,
+  EyeOff,
+  Lock,
+  Save,
+  UserPlus,
+} from "lucide-react";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonStyles } from "@/components/ui/button";
 import { Field, Textarea, Input } from "@/components/ui/field";
 import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
-import { devocionalHoy, pareja, usuario } from "@/lib/mock-data";
+import {
+  crearDevocionalDePareja,
+  guardarRespuestaDevocional,
+  guardarDevocionalPersonal,
+} from "@/actions/app";
 
-const pasosSoap = [
-  {
-    id: "escritura",
-    letra: "E",
-    titulo: "Escritura",
-    ayuda: "Escribe el pasaje o la parte que más te detuvo.",
-  },
-  {
-    id: "observacion",
-    letra: "O",
-    titulo: "Observación",
-    ayuda: "¿Qué dice el texto? ¿De quién habla, qué pasa?",
-  },
-  {
-    id: "aplicacion",
-    letra: "A",
-    titulo: "Aplicación",
-    ayuda: "¿Qué cambia esto en tu semana?",
-  },
-  {
-    id: "oracion",
-    letra: "O",
-    titulo: "Oración",
-    ayuda: "Escríbelo como se lo dirías a Dios.",
-  },
-];
+type DevocionalPareja = {
+  id: string;
+  pasaje: string;
+  titulo: string | null;
+  textoPasaje: string | null;
+  elegidoPorMi: boolean;
+  miRespuesta: string | null;
+  respuestaPareja: string | null;
+  yoRespondi: boolean;
+  parejaRespondio: boolean;
+  revelado: boolean;
+};
 
-export function DevocionalView() {
-  const [modo, setModo] = useState<"pareja" | "personal">("pareja");
+type Personal = {
+  pasaje: string;
+  observacion: string | null;
+  aplicacion: string | null;
+  oracion: string | null;
+  completado: boolean;
+};
+
+export function DevocionalView({
+  tienePareja,
+  nombrePareja,
+  miNombre,
+  devocionalPareja,
+  personal,
+}: {
+  tienePareja: boolean;
+  nombrePareja: string | null;
+  miNombre: string;
+  devocionalPareja: DevocionalPareja | null;
+  personal: Personal | null;
+}) {
+  const [modo, setModo] = useState<"pareja" | "personal">(
+    tienePareja ? "pareja" : "personal",
+  );
 
   return (
     <div>
@@ -48,7 +69,7 @@ export function DevocionalView() {
         description={
           modo === "pareja"
             ? "Cada uno escribe por separado. Las respuestas se revelan cuando ambos terminan."
-            : "Método SOAP, una sección a la vez. Se guarda solo mientras escribes."
+            : "Método SOAP, una sección a la vez. El borrador se guarda al avanzar."
         }
       />
 
@@ -75,39 +96,156 @@ export function DevocionalView() {
         ))}
       </div>
 
-      {modo === "pareja" ? <DevocionalPareja /> : <DevocionalPersonal />}
+      {modo === "pareja" ? (
+        !tienePareja ? (
+          <EmptyState
+            icon={UserPlus}
+            titulo="El devocional en pareja necesita a los dos"
+            descripcion="Cuando tu pareja acepte la invitación, podrán elegir un pasaje y escribir cada uno por su lado."
+            accion={
+              <Link href="/vincular" className={buttonStyles()}>
+                Invitar a mi pareja
+              </Link>
+            }
+          />
+        ) : (
+          <DevocionalEnPareja
+            devocional={devocionalPareja}
+            nombrePareja={nombrePareja ?? "tu pareja"}
+            miNombre={miNombre}
+          />
+        )
+      ) : (
+        <DevocionalPersonal inicial={personal} />
+      )}
     </div>
   );
 }
 
-function DevocionalPareja() {
-  const [respuesta, setRespuesta] = useState(devocionalHoy.miRespuesta);
-  const [guardado, setGuardado] = useState(devocionalHoy.yoRespondi);
+function Mensaje({ error }: { error: string | null }) {
+  if (!error) return null;
+  return (
+    <p
+      role="alert"
+      className="mt-3 flex items-start gap-2 text-sm text-red-700 dark:text-red-400"
+    >
+      <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+      {error}
+    </p>
+  );
+}
+
+function DevocionalEnPareja({
+  devocional,
+  nombrePareja,
+  miNombre,
+}: {
+  devocional: DevocionalPareja | null;
+  nombrePareja: string;
+  miNombre: string;
+}) {
+  const [respuesta, setRespuesta] = useState(devocional?.miRespuesta ?? "");
+  const [guardado, setGuardado] = useState(Boolean(devocional?.yoRespondi));
+  const [error, setError] = useState<string | null>(null);
+  const [pendiente, iniciar] = useTransition();
+
+  const crear = (datos: FormData) =>
+    iniciar(async () => {
+      setError(null);
+      const r = await crearDevocionalDePareja({
+        pasaje: String(datos.get("pasaje") ?? ""),
+        titulo: String(datos.get("titulo") ?? "") || undefined,
+        textoPasaje: String(datos.get("texto") ?? "") || undefined,
+      });
+      if (!r.ok) setError(r.error);
+    });
+
+  const guardar = () =>
+    iniciar(async () => {
+      if (!devocional) return;
+      setError(null);
+      const r = await guardarRespuestaDevocional(devocional.id, respuesta);
+      if (r.ok) setGuardado(true);
+      else setError(r.error);
+    });
+
+  if (!devocional) {
+    return (
+      <Card className="p-6">
+        <h2 className="text-2xl">Elige el pasaje de hoy</h2>
+        <p className="text-muted mt-2 leading-relaxed">
+          Cualquiera de los dos puede proponerlo. {nombrePareja} lo verá en
+          cuanto lo guardes.
+        </p>
+
+        <form action={crear} className="mt-6 space-y-4">
+          <Field htmlFor="pasaje" label="Pasaje">
+            <Input
+              id="pasaje"
+              name="pasaje"
+              required
+              maxLength={120}
+              placeholder="Eclesiastés 4:9-12"
+            />
+          </Field>
+          <Field htmlFor="titulo" label="Título" hint="Opcional">
+            <Input
+              id="titulo"
+              name="titulo"
+              maxLength={120}
+              placeholder="Cordón de tres dobleces"
+            />
+          </Field>
+          <Field
+            htmlFor="texto"
+            label="Texto del pasaje"
+            hint="Opcional, para tenerlo a mano"
+          >
+            <Textarea id="texto" name="texto" className="min-h-28" />
+          </Field>
+          <Button type="submit" loading={pendiente}>
+            Empezar el devocional
+          </Button>
+        </form>
+
+        <Mensaje error={error} />
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-2xl">{devocionalHoy.titulo}</h2>
+            <h2 className="text-2xl">{devocional.titulo ?? devocional.pasaje}</h2>
             <p className="text-accent mt-1 text-sm font-medium">
-              {devocionalHoy.pasaje}
+              {devocional.pasaje}
             </p>
           </div>
-          <Badge tone="honey">Elegido por {pareja.nombre}</Badge>
+          <Badge tone="honey">
+            Elegido por {devocional.elegidoPorMi ? miNombre : nombrePareja}
+          </Badge>
         </div>
-        <blockquote className="border-honey-500 mt-5 border-l-2 pl-4">
-          <p className="font-display text-lg leading-relaxed">
-            {devocionalHoy.texto}
-          </p>
-        </blockquote>
+
+        {devocional.textoPasaje && (
+          <blockquote className="border-honey-500 mt-5 border-l-2 pl-4">
+            <p className="font-display text-lg leading-relaxed">
+              {devocional.textoPasaje}
+            </p>
+          </blockquote>
+        )}
       </Card>
 
       <Card className="p-6">
         <Field
           htmlFor="mi-respuesta"
           label="Lo que Dios me dijo"
-          hint="Solo tú lo ves hasta que los dos escriban"
+          hint={
+            devocional.revelado
+              ? "Ya se reveló"
+              : "Solo tú lo ves hasta que los dos escriban"
+          }
         >
           <Textarea
             id="mi-respuesta"
@@ -119,40 +257,49 @@ function DevocionalPareja() {
             placeholder="No tiene que ser largo. Una frase honesta vale más que una página."
           />
         </Field>
+
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <Button onClick={() => setGuardado(true)} disabled={!respuesta.trim()}>
+          <Button
+            onClick={guardar}
+            loading={pendiente}
+            disabled={!respuesta.trim()}
+          >
             <Save className="size-4" aria-hidden />
             {guardado ? "Guardado" : "Guardar"}
           </Button>
           {guardado && (
             <span className="text-muted flex items-center gap-1.5 text-sm">
-              <Check className="size-4 text-emerald-700 dark:text-emerald-400" aria-hidden />
-              Borrador guardado
+              <Check
+                className="size-4 text-emerald-700 dark:text-emerald-400"
+                aria-hidden
+              />
+              Tu respuesta está guardada
             </span>
           )}
         </div>
+
+        <Mensaje error={error} />
       </Card>
 
-      {/* Mecánica de revelado: el corazón del módulo de pareja. */}
       <Card className="p-6">
         <div className="flex items-center gap-2">
           <EyeOff className="text-muted size-4" aria-hidden />
           <p className="text-muted text-xs tracking-wide uppercase">
-            Lo que escribió {pareja.nombre}
+            Lo que escribió {nombrePareja}
           </p>
         </div>
 
-        {devocionalHoy.parejaRespondio ? (
-          <p className="mt-3 leading-relaxed">{devocionalHoy.respuestaPareja}</p>
+        {devocional.revelado ? (
+          <p className="mt-3 leading-relaxed">{devocional.respuestaPareja}</p>
         ) : (
           <div className="mt-4 flex items-start gap-3">
             <Lock className="text-muted mt-0.5 size-5 shrink-0" aria-hidden />
             <div>
               <p className="font-medium">Todavía no se revela</p>
               <p className="text-muted mt-1 text-sm leading-relaxed">
-                {usuario.nombre}, {pareja.nombre} aún no ha escrito. Cuando
-                termine, los dos verán la respuesta del otro al mismo tiempo.
-                Así ninguno influye en lo que el otro escribe.
+                {devocional.parejaRespondio
+                  ? `${nombrePareja} ya escribió. Guarda lo tuyo y se revelan las dos.`
+                  : `${nombrePareja} aún no ha escrito. Cuando termine, los dos verán la respuesta del otro al mismo tiempo.`}
               </p>
             </div>
           </div>
@@ -162,24 +309,75 @@ function DevocionalPareja() {
   );
 }
 
-function DevocionalPersonal() {
+const PASOS = [
+  {
+    id: "observacion" as const,
+    letra: "O",
+    titulo: "Observación",
+    ayuda: "¿Qué dice el texto? ¿De quién habla, qué pasa?",
+  },
+  {
+    id: "aplicacion" as const,
+    letra: "A",
+    titulo: "Aplicación",
+    ayuda: "¿Qué cambia esto en tu semana?",
+  },
+  {
+    id: "oracion" as const,
+    letra: "O",
+    titulo: "Oración",
+    ayuda: "Escríbelo como se lo dirías a Dios.",
+  },
+];
+
+function DevocionalPersonal({ inicial }: { inicial: Personal | null }) {
+  const [pasaje, setPasaje] = useState(inicial?.pasaje ?? "");
+  const [valores, setValores] = useState({
+    observacion: inicial?.observacion ?? "",
+    aplicacion: inicial?.aplicacion ?? "",
+    oracion: inicial?.oracion ?? "",
+  });
   const [paso, setPaso] = useState(0);
-  const [valores, setValores] = useState<Record<string, string>>({});
-  const actual = pasosSoap[paso];
-  const esUltimo = paso === pasosSoap.length - 1;
+  const [completado, setCompletado] = useState(inicial?.completado ?? false);
+  const [error, setError] = useState<string | null>(null);
+  const [pendiente, iniciar] = useTransition();
+
+  const actual = PASOS[paso];
+  const esUltimo = paso === PASOS.length - 1;
+
+  const guardar = (terminar = false) =>
+    iniciar(async () => {
+      setError(null);
+      const r = await guardarDevocionalPersonal({
+        pasaje,
+        ...valores,
+        completado: terminar,
+      });
+      if (!r.ok) {
+        setError(r.error);
+        return;
+      }
+      if (terminar) setCompletado(true);
+      else if (!esUltimo) setPaso((p) => p + 1);
+    });
 
   return (
     <div className="space-y-4">
       <Card className="p-6">
-        <Field htmlFor="pasaje" label="Pasaje de hoy">
-          <Input id="pasaje" placeholder="Por ejemplo: Salmo 23" />
+        <Field htmlFor="pasaje-personal" label="Pasaje de hoy">
+          <Input
+            id="pasaje-personal"
+            value={pasaje}
+            onChange={(e) => setPasaje(e.target.value)}
+            maxLength={120}
+            placeholder="Salmo 23"
+          />
         </Field>
       </Card>
 
       <Card className="p-6">
-        {/* Progreso por pasos, con estado accesible además del color. */}
         <ol className="mb-6 flex gap-2" aria-label="Progreso del devocional">
-          {pasosSoap.map((p, i) => (
+          {PASOS.map((p, i) => (
             <li key={p.id} className="flex-1">
               <button
                 onClick={() => setPaso(i)}
@@ -193,9 +391,7 @@ function DevocionalPersonal() {
                       : "text-muted hover:bg-white/50 dark:hover:bg-white/8",
                 )}
               >
-                <span className="font-display text-base">
-                  {p.letra}
-                </span>
+                <span className="font-display text-base">{p.letra}</span>
                 <span className="hidden sm:block">{p.titulo}</span>
               </button>
             </li>
@@ -209,7 +405,7 @@ function DevocionalPersonal() {
         >
           <Textarea
             id={`soap-${actual.id}`}
-            value={valores[actual.id] ?? ""}
+            value={valores[actual.id]}
             onChange={(e) =>
               setValores((v) => ({ ...v, [actual.id]: e.target.value }))
             }
@@ -225,17 +421,27 @@ function DevocionalPersonal() {
             Atrás
           </Button>
           <Button
-            onClick={() => !esUltimo && setPaso((p) => p + 1)}
-            disabled={esUltimo && !valores[actual.id]?.trim()}
+            onClick={() => guardar(esUltimo)}
+            loading={pendiente}
+            disabled={!pasaje.trim() || (esUltimo && !valores.oracion.trim())}
           >
-            {esUltimo ? "Terminar devocional" : "Siguiente"}
+            {esUltimo ? "Terminar devocional" : "Guardar y seguir"}
           </Button>
         </div>
+
+        <Mensaje error={error} />
+
+        {completado && (
+          <p className="mt-4 flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400">
+            <Check className="size-4" aria-hidden />
+            Devocional completo. Cuenta para tu racha de hoy.
+          </p>
+        )}
       </Card>
 
       <p className="text-muted px-2 text-sm leading-relaxed">
-        Si cierras la app a mitad, vuelves justo donde quedaste. Este devocional
-        cuenta para tu racha de oración porque incluye la sección Oración.
+        Si cierras la app a mitad, vuelves donde quedaste. Cuenta para la racha
+        porque incluye la sección Oración.
       </p>
     </div>
   );

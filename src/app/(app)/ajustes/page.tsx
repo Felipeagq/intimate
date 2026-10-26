@@ -1,32 +1,16 @@
-import {
-  Bell,
-  Download,
-  Fingerprint,
-  Globe,
-  Trash2,
-  UserMinus,
-  Mail,
-} from "lucide-react";
+import { Bell, Fingerprint, Globe, Mail, Download } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { pareja } from "@/lib/mock-data";
-import { requerirSesion } from "@/server/session";
 import { CerrarSesion } from "./cerrar-sesion";
+import { ZonaDelicada } from "./zona-delicada";
+import { contextoApp } from "@/server/session";
+import { formatDate } from "@/lib/utils";
 
 export const metadata = { title: "Ajustes" };
 
-const notificaciones = [
-  { id: "devocional", label: "Recordatorio del devocional", activa: true },
-  { id: "racha", label: "Racha en riesgo", activa: true, nota: "Máximo una al día" },
-  { id: "afirmacion", label: "Recibí una afirmación", activa: true },
-  { id: "pareja", label: `${pareja.nombre} respondió el devocional`, activa: true },
-];
-
 export default async function AjustesPage() {
-  const sesion = await requerirSesion();
-  const zonaHoraria =
-    (sesion.user as { zonaHoraria?: string }).zonaHoraria ?? "America/Bogota";
+  const ctx = await contextoApp();
 
   return (
     <div>
@@ -41,14 +25,14 @@ export default async function AjustesPage() {
                 <Mail className="size-4" aria-hidden />
                 Correo
               </dt>
-              <dd className="font-medium">{sesion.user.email}</dd>
+              <dd className="font-medium">{ctx.email}</dd>
             </div>
             <div className="flex items-center justify-between gap-4">
               <dt className="text-muted flex items-center gap-2">
                 <Globe className="size-4" aria-hidden />
                 Zona horaria
               </dt>
-              <dd className="font-medium">{zonaHoraria}</dd>
+              <dd className="font-medium">{ctx.zona}</dd>
             </div>
           </dl>
           <p className="text-muted mt-4 text-xs leading-relaxed">
@@ -62,27 +46,11 @@ export default async function AjustesPage() {
             <Bell className="text-accent size-5" aria-hidden />
             <h2 className="text-xl">Notificaciones</h2>
           </div>
-          <ul className="mt-4 space-y-1">
-            {notificaciones.map((n) => (
-              <li
-                key={n.id}
-                className="flex min-h-12 items-center justify-between gap-4"
-              >
-                <label htmlFor={n.id} className="cursor-pointer text-sm">
-                  {n.label}
-                  {n.nota && (
-                    <span className="text-muted block text-xs">{n.nota}</span>
-                  )}
-                </label>
-                <input
-                  type="checkbox"
-                  id={n.id}
-                  defaultChecked={n.activa}
-                  className="accent-honey-500 size-5 cursor-pointer"
-                />
-              </li>
-            ))}
-          </ul>
+          <p className="text-muted mt-2 text-sm leading-relaxed">
+            Todavía no están conectadas. El envío de correo ya funciona, pero
+            los recordatorios programados necesitan un proceso aparte, porque
+            el alojamiento no ejecuta tareas en segundo plano.
+          </p>
         </Card>
 
         <Card className="p-6">
@@ -91,58 +59,30 @@ export default async function AjustesPage() {
             <h2 className="text-xl">Bloqueo de la app</h2>
           </div>
           <p className="text-muted mt-2 text-sm leading-relaxed">
-            Pide tu huella, rostro o PIN cada vez que abras Intimate. Lo que
-            escribes aquí es privado; esto lo protege si alguien toma tu
+            Pendiente. La idea es pedir tu huella, rostro o PIN al abrir
+            Intimate, para proteger lo que escribes si alguien toma tu
             teléfono.
           </p>
-          <Button variant="secondary" className="mt-4">
-            Activar bloqueo
-          </Button>
         </Card>
 
         <Card className="p-6">
           <h2 className="text-xl">Tus datos</h2>
           <p className="text-muted mt-2 text-sm leading-relaxed">
-            Puedes llevarte todo lo que has escrito, en cualquier momento.
+            Podrás llevarte todo lo que has escrito, en cualquier momento. La
+            exportación aún no está construida.
           </p>
-          <Button variant="secondary" className="mt-4">
+          <Button variant="secondary" className="mt-4" disabled>
             <Download className="size-4" aria-hidden />
             Exportar mis datos
           </Button>
         </Card>
 
-        {/* Acciones delicadas, separadas visualmente del resto. */}
-        <Card className="border-red-900/15 p-6 dark:border-red-400/20">
-          <h2 className="text-xl">Zona delicada</h2>
-
-          <div className="border-ink-700/10 mt-5 flex flex-wrap items-center justify-between gap-4 border-t pt-5 dark:border-white/10">
-            <div className="min-w-0">
-              <p className="font-medium">Desvincularme de {pareja.nombre}</p>
-              <p className="text-muted mt-1 max-w-md text-sm leading-relaxed">
-                Es inmediato. Conservas todo lo que tú escribiste; el espacio
-                compartido se archiva y ninguno de los dos podrá leer lo del
-                otro.
-              </p>
-            </div>
-            <Button variant="secondary">
-              <UserMinus className="size-4" aria-hidden />
-              Desvincular
-            </Button>
-          </div>
-
-          <div className="border-ink-700/10 mt-5 flex flex-wrap items-center justify-between gap-4 border-t pt-5 dark:border-white/10">
-            <div className="min-w-0">
-              <p className="font-medium">Eliminar mi cuenta</p>
-              <p className="text-muted mt-1 max-w-md text-sm leading-relaxed">
-                Borra tu cuenta y todo tu contenido. No se puede deshacer.
-              </p>
-            </div>
-            <Button variant="danger">
-              <Trash2 className="size-4" aria-hidden />
-              Eliminar
-            </Button>
-          </div>
-        </Card>
+        <ZonaDelicada
+          nombrePareja={ctx.pareja?.parejaNombre ?? null}
+          vinculadaEn={
+            ctx.pareja ? formatDate(ctx.pareja.vinculadaEn) : null
+          }
+        />
 
         <CerrarSesion />
       </div>

@@ -1,0 +1,63 @@
+import { Card } from "@/components/ui/card";
+import { cn, formatDate } from "@/lib/utils";
+
+const NIVELES = [
+  { clase: "bg-ink-700/8 dark:bg-white/8", texto: "sin registro" },
+  {
+    clase: "bg-ink-700/15 dark:bg-white/15 ring-1 ring-dashed ring-ink-700/30",
+    texto: "día de gracia",
+  },
+  { clase: "bg-honey-300", texto: "oraste" },
+  { clase: "bg-honey-500", texto: "devocional completo" },
+];
+
+export function MapaCalor({
+  dias,
+  constancia,
+}: {
+  dias: { fecha: string; nivel: number }[];
+  constancia: number;
+}) {
+  const conRegistro = dias.filter((d) => d.nivel >= 2).length;
+
+  return (
+    <Card className="p-6">
+      <h2 className="text-xl">Últimos cuatro meses</h2>
+
+      {conRegistro === 0 ? (
+        <p className="text-muted mt-3 leading-relaxed">
+          Todavía no hay nada que mostrar. En cuanto registres tu primera
+          oración, este mapa empieza a llenarse.
+        </p>
+      ) : (
+        <p className="text-muted mt-1 text-sm">
+          {conRegistro} {conRegistro === 1 ? "día" : "días"} con registro.
+        </p>
+      )}
+
+      <div
+        className="mt-5 grid grid-flow-col gap-1 overflow-x-auto pb-2"
+        style={{ gridTemplateRows: "repeat(7, minmax(0, 1fr))" }}
+        role="img"
+        aria-label={`Mapa de constancia: ${constancia}% del mes con oración registrada.`}
+      >
+        {dias.map((d) => (
+          <span
+            key={d.fecha}
+            title={`${formatDate(d.fecha)} · ${NIVELES[d.nivel].texto}`}
+            className={cn("size-3.5 rounded-[4px]", NIVELES[d.nivel].clase)}
+          />
+        ))}
+      </div>
+
+      <ul className="text-muted mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
+        {NIVELES.map((n) => (
+          <li key={n.texto} className="flex items-center gap-1.5">
+            <span className={cn("size-3 rounded-[4px]", n.clase)} aria-hidden />
+            {n.texto}
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}

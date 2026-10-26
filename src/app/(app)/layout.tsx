@@ -1,18 +1,20 @@
 import Link from "next/link";
-import { Settings } from "lucide-react";
+import { Settings, UserPlus } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { BottomNav, Sidebar } from "@/components/app-nav";
 import { Card } from "@/components/ui/card";
-import { requerirSesion } from "@/server/session";
-import { pareja } from "@/lib/mock-data";
+import { contextoApp } from "@/server/session";
+import { rachaDePareja } from "@/server/modules/oracion";
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Sesión real: sin ella, esto redirige a /entrar antes de renderizar nada.
-  const sesion = await requerirSesion();
+  const ctx = await contextoApp();
+  const racha = ctx.pareja
+    ? await rachaDePareja(ctx.pareja.coupleId, ctx.zona)
+    : 0;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-6xl gap-6 px-3 sm:px-4">
@@ -22,16 +24,38 @@ export default async function AppLayout({
             <Logo />
           </Link>
           <Sidebar />
-          <Card className="p-4">
-            <p className="text-muted text-xs">Racha de pareja</p>
-            <p className="mt-1 font-display text-3xl">
-              {pareja.rachaPareja}
-              <span className="text-muted ml-1.5 text-sm">días</span>
-            </p>
-            <p className="text-muted mt-2 text-xs leading-relaxed">
-              Días en que los dos estuvieron.
-            </p>
-          </Card>
+
+          {ctx.pareja ? (
+            <Card className="p-4">
+              <p className="text-muted text-xs">Racha de pareja</p>
+              <p className="mt-1 font-display text-3xl">
+                {racha}
+                <span className="text-muted ml-1.5 text-sm">
+                  {racha === 1 ? "día" : "días"}
+                </span>
+              </p>
+              <p className="text-muted mt-2 text-xs leading-relaxed">
+                {racha === 0
+                  ? "Empieza hoy: cuenta los días en que los dos oran."
+                  : "Días en que los dos estuvieron."}
+              </p>
+            </Card>
+          ) : (
+            <Card className="p-4">
+              <UserPlus className="text-accent size-5" aria-hidden />
+              <p className="mt-2 text-sm font-medium">Invita a tu pareja</p>
+              <p className="text-muted mt-1 text-xs leading-relaxed">
+                Mientras tanto, todo lo personal ya funciona.
+              </p>
+              <Link
+                href="/vincular"
+                className="text-accent mt-3 inline-block cursor-pointer text-xs font-medium underline"
+              >
+                Generar código
+              </Link>
+            </Card>
+          )}
+
           <Link
             href="/ajustes"
             className="text-muted hover:text-foreground flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl px-4 text-sm font-medium transition-colors duration-200"
@@ -49,7 +73,7 @@ export default async function AppLayout({
           </Link>
           <Link
             href="/ajustes"
-            aria-label={`Ajustes de ${sesion.user.name || sesion.user.email}`}
+            aria-label={`Ajustes de ${ctx.email}`}
             className="glass glass-hover flex size-11 cursor-pointer items-center justify-center"
           >
             <Settings className="size-5" aria-hidden />

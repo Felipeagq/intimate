@@ -26,6 +26,15 @@ export const auth = betterAuth({
         required: false,
         defaultValue: "America/Bogota",
       },
+      // activa | suspendida | eliminación pendiente.
+      // `input: false` impide que llegue desde la petición: el estado de una
+      // cuenta solo lo cambia el equipo desde el panel.
+      estado: {
+        type: "string",
+        required: false,
+        defaultValue: "activa",
+        input: false,
+      },
     },
     deleteUser: { enabled: true },
   },
