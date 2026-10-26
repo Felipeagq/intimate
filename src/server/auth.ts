@@ -71,6 +71,7 @@ export const auth = betterAuth({
         const { texto, html } = plantillaCodigo(otp, 10);
 
         await enviarEmail({
+          tipo: "codigo",
           para: email,
           asunto:
             type === "sign-in"

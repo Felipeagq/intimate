@@ -181,6 +181,7 @@ async function notificarVinculacion(creadorId: string, aceptanteId: string) {
 
   await Promise.all([
     enviarEmailSinBloquear({
+      tipo: "vinculacion",
       para: creador.email,
       asunto: `${nombre(aceptante)} aceptó tu invitación en Intimate`,
       ...plantillaVinculacion({
@@ -191,6 +192,7 @@ async function notificarVinculacion(creadorId: string, aceptanteId: string) {
       }),
     }),
     enviarEmailSinBloquear({
+      tipo: "vinculacion",
       para: aceptante.email,
       asunto: `Ya están vinculados con ${nombre(creador)} en Intimate`,
       ...plantillaVinculacion({

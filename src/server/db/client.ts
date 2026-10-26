@@ -7,6 +7,8 @@ import * as adminSchema from "./schema-admin";
 import * as appSchema from "./schema-app";
 import * as auditSchema from "./schema-audit";
 import * as adminInvitesSchema from "./schema-admin-invites";
+import * as sistemaSchema from "./schema-sistema";
+import * as soporteSchema from "./schema-soporte";
 
 /**
  * Driver WebSocket, no HTTP.
@@ -41,6 +43,8 @@ export const db = drizzle(pool, {
     ...appSchema,
     ...auditSchema,
     ...adminInvitesSchema,
+    ...sistemaSchema,
+    ...soporteSchema,
   },
 });
 export type Db = typeof db;

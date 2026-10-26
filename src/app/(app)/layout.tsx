@@ -4,6 +4,7 @@ import { Logo } from "@/components/brand/logo";
 import { BottomNav, Sidebar } from "@/components/app-nav";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarPareja } from "@/components/ui/avatar";
+import { DetectarZona } from "@/components/detectar-zona";
 import { contextoApp } from "@/server/session";
 import { rachaDePareja } from "@/server/modules/oracion";
 
@@ -100,6 +101,7 @@ export default async function AppLayout({
       </div>
 
       <BottomNav />
+      <DetectarZona confirmada={ctx.zonaConfirmada} />
     </div>
   );
 }

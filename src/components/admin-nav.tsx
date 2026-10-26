@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, LifeBuoy, ScrollText, Settings2 } from "lucide-react";
+import { Activity, BarChart3, LifeBuoy, ScrollText, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Rol } from "@/server/auth-admin";
 
@@ -12,6 +12,12 @@ const items = [
     href: "/admin/soporte",
     label: "Soporte",
     icon: LifeBuoy,
+    roles: ["admin", "soporte"] as const,
+  },
+  {
+    href: "/admin/sistema",
+    label: "Sistema",
+    icon: Activity,
     roles: ["admin", "soporte"] as const,
   },
   {

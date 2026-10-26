@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BuscarPasaje } from "@/components/buscar-pasaje";
 import { crearPromesa, marcarPromesaCumplida } from "@/actions/app";
 import { formatDate } from "@/lib/utils";
 
@@ -32,6 +33,8 @@ export function PanelPromesas({
   cumplidas: number;
 }) {
   const [formulario, setFormulario] = useState(false);
+  const [citaNueva, setCitaNueva] = useState("");
+  const [textoNuevo, setTextoNuevo] = useState("");
   const [cumpliendo, setCumpliendo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendiente, iniciar] = useTransition();
@@ -51,8 +54,13 @@ export function PanelPromesas({
         etiquetas,
       });
 
-      if (r.ok) setFormulario(false);
-      else setError(r.error);
+      if (r.ok) {
+        setFormulario(false);
+        setCitaNueva("");
+        setTextoNuevo("");
+      } else {
+        setError(r.error);
+      }
     });
 
   const cumplir = (id: string, datos: FormData) =>
@@ -134,9 +142,19 @@ export function PanelPromesas({
                 name="cita"
                 required
                 maxLength={80}
+                value={citaNueva}
+                onChange={(e) => setCitaNueva(e.target.value)}
                 placeholder="Jeremías 29:11"
               />
             </Field>
+            <BuscarPasaje
+              referencia={citaNueva}
+              uso="promesa"
+              onEncontrado={(p) => {
+                setCitaNueva(p.referencia);
+                setTextoNuevo(p.texto);
+              }}
+            />
             <Field htmlFor="texto" label="Texto del versículo">
               <Textarea
                 id="texto"
@@ -144,6 +162,8 @@ export function PanelPromesas({
                 required
                 maxLength={2000}
                 className="min-h-24"
+                value={textoNuevo}
+                onChange={(e) => setTextoNuevo(e.target.value)}
               />
             </Field>
             <Field

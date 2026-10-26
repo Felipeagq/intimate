@@ -16,6 +16,7 @@ import { Button, buttonStyles } from "@/components/ui/button";
 import { Field, Textarea, Input } from "@/components/ui/field";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BuscarPasaje } from "@/components/buscar-pasaje";
 import { cn } from "@/lib/utils";
 import {
   crearDevocionalDePareja,
@@ -38,6 +39,7 @@ type DevocionalPareja = {
 
 type Personal = {
   pasaje: string;
+  textoPasaje: string | null;
   observacion: string | null;
   aplicacion: string | null;
   oracion: string | null;
@@ -144,6 +146,8 @@ function DevocionalEnPareja({
   nombrePareja: string;
   miNombre: string;
 }) {
+  const [pasajeNuevo, setPasajeNuevo] = useState("");
+  const [textoNuevo, setTextoNuevo] = useState("");
   const [respuesta, setRespuesta] = useState(devocional?.miRespuesta ?? "");
   const [guardado, setGuardado] = useState(Boolean(devocional?.yoRespondi));
   const [error, setError] = useState<string | null>(null);
@@ -185,9 +189,19 @@ function DevocionalEnPareja({
               name="pasaje"
               required
               maxLength={120}
+              value={pasajeNuevo}
+              onChange={(e) => setPasajeNuevo(e.target.value)}
               placeholder="Eclesiastés 4:9-12"
             />
           </Field>
+          <BuscarPasaje
+            referencia={pasajeNuevo}
+            uso="devocional"
+            onEncontrado={(p) => {
+              setPasajeNuevo(p.referencia);
+              setTextoNuevo(p.texto);
+            }}
+          />
           <Field htmlFor="titulo" label="Título" hint="Opcional">
             <Input
               id="titulo"
@@ -199,9 +213,16 @@ function DevocionalEnPareja({
           <Field
             htmlFor="texto"
             label="Texto del pasaje"
-            hint="Opcional, para tenerlo a mano"
+            hint="Opcional: se llena con “Traer el texto”"
           >
-            <Textarea id="texto" name="texto" className="min-h-28" />
+            <Textarea
+              id="texto"
+              name="texto"
+              className="min-h-28"
+              maxLength={4000}
+              value={textoNuevo}
+              onChange={(e) => setTextoNuevo(e.target.value)}
+            />
           </Field>
           <Button type="submit" loading={pendiente}>
             Empezar el devocional
@@ -332,6 +353,7 @@ const PASOS = [
 
 function DevocionalPersonal({ inicial }: { inicial: Personal | null }) {
   const [pasaje, setPasaje] = useState(inicial?.pasaje ?? "");
+  const [textoPasaje, setTextoPasaje] = useState(inicial?.textoPasaje ?? "");
   const [valores, setValores] = useState({
     observacion: inicial?.observacion ?? "",
     aplicacion: inicial?.aplicacion ?? "",
@@ -350,6 +372,7 @@ function DevocionalPersonal({ inicial }: { inicial: Personal | null }) {
       setError(null);
       const r = await guardarDevocionalPersonal({
         pasaje,
+        textoPasaje: textoPasaje || undefined,
         ...valores,
         completado: terminar,
       });
@@ -373,6 +396,23 @@ function DevocionalPersonal({ inicial }: { inicial: Personal | null }) {
             placeholder="Salmo 23"
           />
         </Field>
+
+        <div className="mt-3">
+          <BuscarPasaje
+            referencia={pasaje}
+            uso="devocional"
+            onEncontrado={(p) => {
+              setPasaje(p.referencia);
+              setTextoPasaje(p.texto);
+            }}
+          />
+        </div>
+
+        {textoPasaje && (
+          <blockquote className="border-honey-500 mt-5 border-l-2 pl-4">
+            <p className="font-display text-lg leading-relaxed">{textoPasaje}</p>
+          </blockquote>
+        )}
       </Card>
 
       <Card className="p-6">

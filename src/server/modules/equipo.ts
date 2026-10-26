@@ -67,6 +67,7 @@ export async function crearInvitacionEquipo(
   });
 
   await enviarEmailSinBloquear({
+    tipo: "invitacion_equipo",
     para: correo,
     asunto: `${invitadoPorEmail} te invitó al panel de Intimate`,
     ...plantillaInvitacionEquipo({

@@ -1,4 +1,5 @@
-import { ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { MailWarning, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { TarjetaMetrica } from "./tarjeta-metrica";
 import { PageHeader } from "@/components/ui/page-header";
@@ -12,6 +13,7 @@ import {
   retencionPorCohorte,
   desgloseModulos,
 } from "@/server/modules/admin";
+import { resumenCorreos } from "@/server/modules/sistema";
 import {
   DesgloseModulos,
   DistribucionRachas,
@@ -25,7 +27,7 @@ export const metadata = { title: "Dashboard" };
 export default async function AdminDashboard() {
   await requerirAdmin();
 
-  const [metricas, serie, activos7, rachas, cohortes, modulos] =
+  const [metricas, serie, activos7, rachas, cohortes, modulos, correos] =
     await Promise.all([
       obtenerMetricas(),
       serieParejasActivas(),
@@ -33,6 +35,7 @@ export default async function AdminDashboard() {
       distribucionDeRachas(),
       retencionPorCohorte(),
       desgloseModulos(),
+      resumenCorreos(7),
     ]);
 
   // El embudo reutiliza la distribución ya calculada en lugar de recorrer
@@ -72,6 +75,31 @@ export default async function AdminDashboard() {
         title="Dashboard"
         description="Solo datos agregados. Ninguna pantalla del panel muestra contenido escrito por un usuario."
       />
+
+      {/* Un fallo de correo es silencioso para el usuario: no llega su código
+          y no sabe por qué. Se avisa aquí para no depender de que alguien
+          entre a mirar la pantalla de Sistema. */}
+      {correos.fallidos > 0 && (
+        <Link
+          href="/admin/sistema"
+          className="mb-4 flex cursor-pointer items-start gap-3 rounded-2xl bg-amber-500/14 p-4 transition-colors duration-200 hover:bg-amber-500/22"
+        >
+          <MailWarning
+            className="mt-0.5 size-5 shrink-0 text-amber-800 dark:text-amber-300"
+            aria-hidden
+          />
+          <span className="text-sm leading-relaxed">
+            <strong className="font-medium">
+              {correos.fallidos}{" "}
+              {correos.fallidos === 1
+                ? "correo no se pudo enviar"
+                : "correos no se pudieron enviar"}
+            </strong>{" "}
+            esta semana. Si son códigos de acceso, alguien se quedó sin poder
+            entrar. Ver detalle →
+          </span>
+        </Link>
+      )}
 
       {/* Dos por fila en teléfono; la métrica norte ocupa el ancho completo.
           Si queda una suelta al final, también lo ocupa, para no dejar un

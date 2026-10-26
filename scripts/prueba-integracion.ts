@@ -25,7 +25,13 @@ import * as acuerdos from "../src/server/modules/acuerdos";
 import * as checkin from "../src/server/modules/checkin";
 import * as admin from "../src/server/modules/admin";
 import * as auditoria from "../src/server/modules/auditoria";
-import { calcularRacha } from "../src/server/modules/fecha";
+import { calcularRacha, fechaLocal } from "../src/server/modules/fecha";
+import { desfaseDe, esZonaValida, listarZonas } from "../src/server/modules/zona";
+import {
+  LIBROS,
+  formatearReferencia,
+  interpretarReferencia,
+} from "../src/server/modules/referencia-biblica";
 
 const ZONA = "America/Bogota";
 const CORREOS = [
@@ -99,6 +105,91 @@ async function main() {
   comprobar(
     "sin registros la racha es 0",
     calcularRacha([], "2026-10-25").actual === 0,
+  );
+
+  console.log("\n— Zonas horarias —");
+  comprobar("acepta una zona real", esZonaValida("America/Bogota") && esZonaValida("Europe/Madrid"));
+  comprobar(
+    "rechaza zonas inventadas, vacías o enormes",
+    !esZonaValida("Marte/Olympus") && !esZonaValida("") && !esZonaValida("x".repeat(200)),
+  );
+  comprobar("rechaza lo que no es texto", !esZonaValida(42) && !esZonaValida(null));
+  comprobar("el selector ofrece UTC y Bogotá", listarZonas().includes("UTC") && listarZonas().includes("America/Bogota"));
+  comprobar("y cientos de zonas más", listarZonas().length > 300);
+  comprobar("el desfase de Bogotá es UTC-5", desfaseDe("America/Bogota") === "UTC-5");
+
+  // 03:30 UTC del día 26 todavía es la noche del 25 en Colombia.
+  const instante = new Date("2026-10-26T03:30:00Z");
+  comprobar(
+    "el mismo instante es otro día según la zona",
+    fechaLocal("America/Bogota", instante) === "2026-10-25" &&
+      fechaLocal("Asia/Tokyo", instante) === "2026-10-26",
+  );
+  // Criterio del documento: orar a las 23:50 cuenta para ese día aunque
+  // el servidor ya esté en el siguiente.
+  comprobar(
+    "orar a las 23:50 en Bogotá cuenta para ese día, no para el siguiente",
+    fechaLocal("America/Bogota", new Date("2026-10-26T04:50:00Z")) === "2026-10-25",
+  );
+
+  console.log("\n— Citas bíblicas —");
+  const cita = (texto: string) => {
+    const r = interpretarReferencia(texto);
+    return r.ok ? formatearReferencia(r.referencia) : null;
+  };
+  const casos: [string, string][] = [
+    ["Juan 3:16", "Juan 3:16"],
+    ["jn 3:16-18", "Juan 3:16-18"],
+    ["  JUAN   3 : 16  ", "Juan 3:16"],
+    ["Salmo 23", "Salmos 23"],
+    ["Sal 119:105", "Salmos 119:105"],
+    ["Ro. 8.28", "Romanos 8:28"],
+    ["Ro 8,28-30", "Romanos 8:28-30"],
+    ["Isaías 53:5", "Isaías 53:5"],
+    ["Is 41:10", "Isaías 41:10"],
+    ["1 Corintios 13:4-7", "1 Corintios 13:4-7"],
+    ["1Co 13", "1 Corintios 13"],
+    ["I Corintios 13", "1 Corintios 13"],
+    ["Primera de Juan 1", "1 Juan 1"],
+    ["II Pedro 1:3", "2 Pedro 1:3"],
+    ["2 Timoteo 3:16", "2 Timoteo 3:16"],
+    ["Filipenses 4:13", "Filipenses 4:13"],
+    ["Filemón 1:6", "Filemón 1:6"],
+    ["Cantar de los Cantares 2:4", "Cantares 2:4"],
+    ["Apocalipsis 21:4", "Apocalipsis 21:4"],
+    ["Génesis 1:1", "Génesis 1:1"],
+    ["genesis 1:1", "Génesis 1:1"],
+  ];
+  for (const [entrada, esperado] of casos) {
+    comprobar(`"${entrada.trim()}" → ${esperado}`, cita(entrada) === esperado);
+  }
+  const rechazadas = [
+    "", "   ", "Foo 3:16", "Juan", "Juan 0:1", "Juan 3:0",
+    "Juan 3:18-16", "Juan 3:16-4:2", "3:16", "x".repeat(200),
+  ];
+  for (const entrada of rechazadas) {
+    comprobar(
+      `rechaza "${entrada.slice(0, 24).trim()}${entrada.length > 24 ? "…" : ""}"`,
+      cita(entrada) === null,
+    );
+  }
+  comprobar("la lista tiene los 66 libros", LIBROS.length === 66);
+  comprobar(
+    "numerados del 1 al 66 sin saltos ni repetidos",
+    LIBROS.every((l, i) => l.nr === i + 1),
+  );
+  comprobar(
+    "ningún alias se repite entre libros distintos",
+    (() => {
+      const vistos = new Map<string, number>();
+      for (const l of LIBROS) {
+        for (const a of l.alias) {
+          if (vistos.has(a) && vistos.get(a) !== l.nr) return false;
+          vistos.set(a, l.nr);
+        }
+      }
+      return true;
+    })(),
   );
 
   console.log("\n— Vinculación de pareja —");

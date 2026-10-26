@@ -7,6 +7,7 @@ import {
   integer,
   date,
   uuid,
+  jsonb,
   index,
   unique,
   primaryKey,
@@ -285,6 +286,30 @@ export const couplePlanProgress = pgTable(
     temasCompletados: text("temas_completados").array().notNull().default([]),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
+);
+
+// ------------------------------------------------------------ Texto bíblico
+
+/**
+ * Caché de capítulos traídos de la API bíblica.
+ *
+ * Un capítulo de una traducción no cambia nunca, así que se guarda entero
+ * la primera vez y no se vuelve a pedir. Reduce la carga sobre un servicio
+ * ajeno y hace que leer un pasaje ya consultado no dependa de que ese
+ * servicio esté disponible.
+ */
+export const bibleChapters = pgTable(
+  "bible_chapters",
+  {
+    traduccion: text("traduccion").notNull(),
+    libro: integer("libro").notNull(),
+    capitulo: integer("capitulo").notNull(),
+    versiculos: jsonb("versiculos")
+      .$type<{ verso: number; texto: string }[]>()
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.traduccion, t.libro, t.capitulo] })],
 );
 
 // --------------------------------------------------------------- Relaciones

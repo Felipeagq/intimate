@@ -50,6 +50,27 @@
       "when": 1792993294679,
       "tag": "0006_previous_marten_broadcloak",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792993440091,
+      "tag": "0007_secret_puff_adder",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792993928213,
+      "tag": "0008_clumsy_william_stryker",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792994162182,
+      "tag": "0009_outstanding_raza",
+      "breakpoints": true
     }
   ]
 }

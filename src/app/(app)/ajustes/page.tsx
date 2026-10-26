@@ -1,18 +1,27 @@
-import { Bell, Fingerprint, Globe, Mail, Download } from "lucide-react";
+import { Bell, Fingerprint, Mail, Download } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { CerrarSesion } from "./cerrar-sesion";
 import { SubirFoto } from "@/components/subir-foto";
 import { EditarPerfil } from "./editar-perfil";
+import { SelectorZona } from "./selector-zona";
 import { ZonaDelicada } from "./zona-delicada";
 import { contextoApp } from "@/server/session";
+import { desfaseDe, listarZonas } from "@/server/modules/zona";
 import { formatDate } from "@/lib/utils";
 
 export const metadata = { title: "Ajustes" };
 
 export default async function AjustesPage() {
   const ctx = await contextoApp();
+
+  // La lista sale del servidor y no del navegador: si cada uno armara la
+  // suya, podrían diferir y React avisaría de un desajuste al hidratar.
+  const opcionesZona = listarZonas().map((z) => ({
+    valor: z,
+    etiqueta: `${z.replaceAll("_", " ")} (${desfaseDe(z)})`,
+  }));
 
   return (
     <div>
@@ -46,18 +55,11 @@ export default async function AjustesPage() {
               </dt>
               <dd className="font-medium">{ctx.email}</dd>
             </div>
-            <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted flex items-center gap-2">
-                <Globe className="size-4" aria-hidden />
-                Zona horaria
-              </dt>
-              <dd className="font-medium">{ctx.zona}</dd>
-            </div>
           </dl>
-          <p className="text-muted mt-4 text-xs leading-relaxed">
-            Tu zona horaria decide qué cuenta como “hoy” para la racha. Orar a
-            las 23:50 cuenta para ese día.
-          </p>
+
+          <div className="border-ink-700/10 mt-5 border-t pt-5 dark:border-white/10">
+            <SelectorZona zonaActual={ctx.zona} opciones={opcionesZona} />
+          </div>
         </Card>
 
         <Card className="p-6">

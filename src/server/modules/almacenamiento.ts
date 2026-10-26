@@ -142,3 +142,47 @@ export async function borrarFoto(clave: string | null) {
 export function claveEsDelUsuario(clave: string, userId: string) {
   return clave.startsWith(prefijoAvatares(userId));
 }
+
+/**
+ * Comprueba que se pueda escribir y borrar en el bucket, que es lo que la
+ * app necesita de verdad. Escribe un archivo diminuto y lo borra.
+ *
+ * No usa `HeadBucket` a propósito: exige un permiso (ListBucket) que una
+ * política de IAM mínima puede no tener aunque las fotos funcionen, y daría
+ * una falsa alarma.
+ */
+export async function probarAlmacenamiento(): Promise<{
+  ok: boolean;
+  detalle: string;
+}> {
+  if (!almacenamientoHabilitado) {
+    return { ok: false, detalle: "Faltan variables S3_*." };
+  }
+
+  const carpeta = env.S3_FOLDER ? `${env.S3_FOLDER}/` : "";
+  const clave = `${carpeta}salud/ping-${Date.now()}.txt`;
+
+  try {
+    await s3().send(
+      new PutObjectCommand({
+        Bucket: env.S3_BUCKET!,
+        Key: clave,
+        Body: "ok",
+        ContentType: "text/plain",
+      }),
+    );
+    await s3().send(
+      new DeleteObjectCommand({ Bucket: env.S3_BUCKET!, Key: clave }),
+    );
+    return { ok: true, detalle: "Escribe y borra en el bucket." };
+  } catch (e) {
+    const nombre = e instanceof Error ? e.name : "Error";
+    return {
+      ok: false,
+      detalle:
+        nombre === "AccessDenied"
+          ? "Acceso denegado: la política de IAM necesita PutObject y DeleteObject sobre la carpeta."
+          : `No se pudo escribir en el bucket (${nombre}).`,
+    };
+  }
+}

@@ -32,6 +32,24 @@ const FUENTE =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif";
 const SERIF = "Georgia,'Times New Roman',serif";
 
+/**
+ * Escapa texto para meterlo en HTML.
+ *
+ * Todo lo que escribió una persona y acaba dentro de un correo pasa por aquí:
+ * el nombre de tu pareja, un mensaje de soporte, un correo. Sin esto, alguien
+ * podría ponerse como nombre `<a href="…">` y esa etiqueta llegaría tal cual
+ * dentro del correo que recibe la otra persona. El texto plano NO se escapa:
+ * ahí `&amp;` se vería literal.
+ */
+export function esc(texto: string): string {
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /** Línea de vista previa: lo que se lee en la bandeja antes de abrir. */
 function preheader(texto: string) {
   return `<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all;">${texto}</div>`;
@@ -43,7 +61,8 @@ function preheader(texto: string) {
  * se adelanta a eso y lo deja en los colores de la marca.
  */
 function correoEnTexto(email: string) {
-  return `<a href="mailto:${email}" style="color:${ATENUADO};text-decoration:none;border-bottom:1px solid ${BORDE};">${email}</a>`;
+  const seguro = esc(email);
+  return `<a href="mailto:${seguro}" style="color:${ATENUADO};text-decoration:none;border-bottom:1px solid ${BORDE};">${seguro}</a>`;
 }
 
 function envoltorio(contenido: string, vistaPrevia: string) {
@@ -138,7 +157,8 @@ function pie() {
 
 /** Fila de la persona: inicial en círculo, nombre en negrita y correo. */
 function filaPersona(nombre: string, email: string) {
-  const inicial = nombre.trim().charAt(0).toUpperCase() || "?";
+  const inicial = esc(nombre.trim().charAt(0).toUpperCase() || "?");
+  nombre = esc(nombre);
 
   return `
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:22px 0 0;">
@@ -230,7 +250,7 @@ export function plantillaVinculacion({
 
   const principal = `
                   <div style="font-family:${SERIF};font-size:24px;line-height:1.25;font-weight:bold;color:${CHOCOLATE};">
-                    ${titular}
+                    ${esc(titular)}
                   </div>
                   <p style="margin:10px 0 0;font-size:15px;line-height:1.65;color:${ATENUADO};">
                     ${invitaste ? "Tu código de invitación fue usado por:" : "Usaste el código de:"}
@@ -281,9 +301,11 @@ ${boton("Abrir Intimate", `${baseUrl}/pareja`)}`;
     texto,
     html: envoltorio(
       `${cabecera()}${tarjeta(principal)}${seguridad}${pie()}`,
-      invitaste
-        ? `${nombreOtro} usó tu código de invitación`
-        : `Ya están vinculados con ${nombreOtro}`,
+      esc(
+        invitaste
+          ? `${nombreOtro} usó tu código de invitación`
+          : `Ya están vinculados con ${nombreOtro}`,
+      ),
     ),
   };
 }
@@ -413,9 +435,9 @@ export function plantillaInvitacionEquipo({
                     Te invitaron al panel
                   </div>
                   <p style="margin:10px 0 0;font-size:15px;line-height:1.65;color:${ATENUADO};">
-                    <strong style="color:${CHOCOLATE};">${invitadoPor}</strong> te
+                    <strong style="color:${CHOCOLATE};">${esc(invitadoPor)}</strong> te
                     invitó a entrar con el rol de
-                    <strong style="color:${CHOCOLATE};">${rolTexto}</strong>.
+                    <strong style="color:${CHOCOLATE};">${esc(rolTexto)}</strong>.
                   </p>
 ${lista([
   "Elige tu propia contraseña al aceptar: nadie más la conoce, ni quien te invitó",
@@ -455,7 +477,82 @@ ${boton("Aceptar invitación", enlace)}
     texto,
     html: envoltorio(
       `${cabecera()}${tarjeta(principal)}${seguridad}${pie()}`,
-      `${invitadoPor} te invitó al panel de Intimate`,
+      esc(`${invitadoPor} te invitó al panel de Intimate`),
+    ),
+  };
+}
+
+/** Respuesta del equipo a quien pidió ayuda. */
+export function plantillaRespuestaSoporte({
+  respuesta,
+  enlaceAyuda,
+}: {
+  respuesta: string;
+  enlaceAyuda: string;
+}) {
+  const texto = [
+    "Respuesta del equipo de Intimate",
+    "",
+    respuesta,
+    "",
+    `Si necesitas algo más, escríbenos de nuevo aquí: ${enlaceAyuda}`,
+  ].join("\n");
+
+  // Los saltos de línea de quien responde se conservan; el resto se escapa.
+  const cuerpo = esc(respuesta).replace(/\n/g, "<br>");
+
+  const principal = `
+                  <div style="font-family:${SERIF};font-size:24px;line-height:1.25;font-weight:bold;color:${CHOCOLATE};">
+                    Respuesta del equipo
+                  </div>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0 0;">
+                    <tr>
+                      <td bgcolor="${BEIGE}" style="background-color:${BEIGE};border-radius:18px;padding:20px 22px;font-size:15px;line-height:1.75;color:${CHOCOLATE};">
+                        ${cuerpo}
+                      </td>
+                    </tr>
+                  </table>
+${boton("Escribirnos de nuevo", enlaceAyuda)}`;
+
+  return {
+    texto,
+    html: envoltorio(
+      `${cabecera()}${tarjeta(principal)}${pie()}`,
+      "Respondimos tu mensaje",
+    ),
+  };
+}
+
+/**
+ * Aviso interno de un reporte urgente. Deliberadamente NO lleva el mensaje:
+ * el correo viaja por un proveedor externo y llega a varias bandejas, y lo
+ * que alguien cuenta en un reporte de abuso no debe salir del panel.
+ */
+export function plantillaAvisoReporteUrgente({ enlace }: { enlace: string }) {
+  const texto = [
+    "Llegó un reporte urgente a la bandeja de soporte de Intimate.",
+    "",
+    "Por seguridad el mensaje no va en este correo. Léelo en el panel:",
+    enlace,
+    "",
+    "Los reportes de abuso se atienden primero.",
+  ].join("\n");
+
+  const principal = `
+                  <div style="font-family:${SERIF};font-size:24px;line-height:1.25;font-weight:bold;color:${CHOCOLATE};">
+                    Reporte urgente
+                  </div>
+                  <p style="margin:10px 0 0;font-size:15px;line-height:1.65;color:${ATENUADO};">
+                    Llegó un reporte a la bandeja de soporte. Por seguridad el
+                    mensaje no viaja en este correo: ábrelo en el panel.
+                  </p>
+${boton("Abrir la bandeja", enlace)}`;
+
+  return {
+    texto,
+    html: envoltorio(
+      `${cabecera()}${tarjeta(principal)}${pie()}`,
+      "Hay un reporte urgente esperando",
     ),
   };
 }
