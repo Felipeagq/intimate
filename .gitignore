@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Vista previa de correos generada por pnpm email:probar --vista-previa
+/.vista-previa-correo/

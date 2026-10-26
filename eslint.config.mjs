@@ -15,6 +15,9 @@ const eslintConfig = [
     ignores: [
       "node_modules/**",
       ".next/**",
+      // Salida de `pnpm build:check`, que va a un directorio aparte para no
+      // pisarle los chunks al servidor de desarrollo.
+      ".next-build/**",
       "out/**",
       "build/**",
       "next-env.d.ts",

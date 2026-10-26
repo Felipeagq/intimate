@@ -1,9 +1,11 @@
 import { createHash, randomInt } from "node:crypto";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { db } from "../db/client";
 import { user } from "../db/schema";
 import { couples, coupleInvites } from "../db/schema-app";
 import { diferenciaEnDias, fechaLocal } from "./fecha";
+import { enviarEmailSinBloquear, plantillaVinculacion } from "../email";
+import { env } from "../env";
 
 /** Sin caracteres ambiguos: nada de O/0 ni I/1. */
 const ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -25,6 +27,8 @@ export type ParejaActiva = {
   parejaId: string;
   parejaNombre: string;
   parejaEmail: string;
+  /** Ruta en el almacenamiento; se firma al renderizar. */
+  parejaFoto: string | null;
   vinculadaEn: Date;
   diasJuntos: number;
 };
@@ -53,6 +57,7 @@ export async function obtenerPareja(
     parejaId: otro.id,
     parejaNombre: otro.name?.trim() || otro.email.split("@")[0],
     parejaEmail: otro.email,
+    parejaFoto: otro.image,
     vinculadaEn: fila.vinculadaEn,
     diasJuntos: Math.max(0, diferenciaEnDias(desde, fechaLocal(zona))),
   };
@@ -115,7 +120,7 @@ export async function aceptarInvitacion(userId: string, codigo: string) {
     throw new Error("Ya estás vinculado a una pareja.");
   }
 
-  return db.transaction(async (tx) => {
+  const nueva = await db.transaction(async (tx) => {
     const invitacion = await tx.query.coupleInvites.findFirst({
       where: eq(coupleInvites.codigoHash, hashCodigo(codigo)),
     });
@@ -136,7 +141,7 @@ export async function aceptarInvitacion(userId: string, codigo: string) {
       throw generico;
     }
 
-    const [nueva] = await tx
+    const [fila] = await tx
       .insert(couples)
       .values({ miembroA: invitacion.creadorId, miembroB: userId })
       .returning();
@@ -146,8 +151,56 @@ export async function aceptarInvitacion(userId: string, codigo: string) {
       .set({ usadaEn: new Date(), usadaPor: userId })
       .where(eq(coupleInvites.id, invitacion.id));
 
-    return nueva;
+    return fila;
   });
+
+  // Fuera de la transacción y sin bloquear: el vínculo ya está hecho y un
+  // fallo del correo no puede deshacerlo.
+  await notificarVinculacion(nueva.miembroA, nueva.miembroB);
+
+  return nueva;
+}
+
+/**
+ * Avisa a los dos. Para quien invitó es, además, una alerta de seguridad:
+ * si su código acabó en las manos equivocadas, este correo es la forma de
+ * enterarse y poder salir.
+ */
+async function notificarVinculacion(creadorId: string, aceptanteId: string) {
+  const personas = await db
+    .select({ id: user.id, name: user.name, email: user.email })
+    .from(user)
+    .where(inArray(user.id, [creadorId, aceptanteId]));
+
+  const creador = personas.find((p) => p.id === creadorId);
+  const aceptante = personas.find((p) => p.id === aceptanteId);
+  if (!creador || !aceptante) return;
+
+  const nombre = (p: { name: string; email: string }) =>
+    p.name?.trim() || p.email.split("@")[0];
+
+  await Promise.all([
+    enviarEmailSinBloquear({
+      para: creador.email,
+      asunto: `${nombre(aceptante)} aceptó tu invitación en Intimate`,
+      ...plantillaVinculacion({
+        nombreOtro: nombre(aceptante),
+        emailOtro: aceptante.email,
+        invitaste: true,
+        baseUrl: env.BETTER_AUTH_URL,
+      }),
+    }),
+    enviarEmailSinBloquear({
+      para: aceptante.email,
+      asunto: `Ya están vinculados con ${nombre(creador)} en Intimate`,
+      ...plantillaVinculacion({
+        nombreOtro: nombre(creador),
+        emailOtro: creador.email,
+        invitaste: false,
+        baseUrl: env.BETTER_AUTH_URL,
+      }),
+    }),
+  ]);
 }
 
 /**

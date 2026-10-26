@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "./auth";
 import { obtenerPareja, type ParejaActiva } from "./modules/pareja";
+import { urlsDeFotos } from "./modules/almacenamiento";
 
 export async function obtenerSesion() {
   return auth.api.getSession({ headers: await headers() });
@@ -23,6 +24,9 @@ export type ContextoApp = {
   email: string;
   nombre: string;
   zona: string;
+  /** Enlace firmado, caduca en una hora. */
+  fotoUrl: string | null;
+  parejaFotoUrl: string | null;
   pareja: ParejaActiva | null;
 };
 
@@ -33,19 +37,29 @@ export async function contextoApp(): Promise<ContextoApp> {
   const u = sesion.user as typeof sesion.user & {
     zonaHoraria?: string | null;
     estado?: string | null;
+    image?: string | null;
   };
 
   // Una cuenta suspendida no debe poder seguir usando la app.
   if (u.estado && u.estado !== "activa") redirect("/cuenta-suspendida");
 
   const zona = u.zonaHoraria || "America/Bogota";
+  const pareja = await obtenerPareja(u.id, zona);
+
+  // Las dos se firman juntas para no pagar dos viajes separados.
+  const [fotoUrl, parejaFotoUrl] = await urlsDeFotos([
+    u.image ?? null,
+    pareja?.parejaFoto ?? null,
+  ]);
 
   return {
     userId: u.id,
     email: u.email,
     nombre: u.name?.trim().split(" ")[0] || capitalizar(u.email.split("@")[0]),
     zona,
-    pareja: await obtenerPareja(u.id, zona),
+    fotoUrl,
+    parejaFotoUrl,
+    pareja,
   };
 }
 

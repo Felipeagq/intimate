@@ -1,10 +1,36 @@
 import { correoHabilitado, env } from "./env";
+import { LOGO_CID, logoBase64 } from "./logo-correo";
+
+export {
+  plantillaCodigo,
+  plantillaPrueba,
+  plantillaVinculacion,
+} from "./plantillas-correo";
+
+/**
+ * Envía sin dejar que un fallo del correo rompa la operación que lo
+ * disparó. Vincularse a una pareja es lo importante; que el aviso no salga
+ * es molesto, pero no puede deshacer el vínculo ni mostrar un error al
+ * usuario por algo que no depende de él.
+ */
+export async function enviarEmailSinBloquear(mensaje: Mensaje) {
+  try {
+    await enviarEmail(mensaje);
+  } catch (e) {
+    console.error(
+      `No se pudo enviar "${mensaje.asunto}" a ${mensaje.para}:`,
+      e instanceof Error ? e.message : e,
+    );
+  }
+}
 
 type Mensaje = {
   para: string;
   asunto: string;
   texto: string;
   html?: string;
+  /** Adjunta el logo en línea para que el HTML pueda usar `cid:`. */
+  conLogo?: boolean;
 };
 
 const SENDGRID_URL = "https://api.sendgrid.com/v3/mail/send";
@@ -16,9 +42,26 @@ const SENDGRID_URL = "https://api.sendgrid.com/v3/mail/send";
  * igual en cómputo serverless y cambiar a SES más adelante es reescribir solo
  * esta función, no el resto del código que la llama.
  */
-export async function enviarEmail({ para, asunto, texto, html }: Mensaje) {
-  // En desarrollo también se imprime, para no depender de la bandeja.
+export async function enviarEmail({
+  para,
+  asunto,
+  texto,
+  html,
+  conLogo = true,
+}: Mensaje) {
+  // Freno para scripts y pruebas: evita mandar a direcciones inventadas,
+  // cuyos rebotes castigan la reputación del remitente en SendGrid.
+  const desactivado = process.env.CORREO_DESACTIVADO === "1";
+
+  // En desarrollo también se imprime, para no depender de la bandeja. El
+  // pie dice lo que de verdad va a pasar, no lo que debería pasar.
   if (process.env.NODE_ENV !== "production") {
+    const estado = desactivado
+      ? "SIN ENVIAR: CORREO_DESACTIVADO=1"
+      : correoHabilitado
+        ? "enviándose por SendGrid…"
+        : "SIN ENVIAR: falta configurar SendGrid";
+
     console.log(
       [
         "",
@@ -26,11 +69,13 @@ export async function enviarEmail({ para, asunto, texto, html }: Mensaje) {
         `│ ${asunto}`,
         "│",
         ...texto.split("\n").map((l) => `│ ${l}`),
-        `└─ ${correoHabilitado ? "enviándose por SendGrid…" : "SIN ENVIAR: falta configurar SendGrid"}`,
+        `└─ ${estado}`,
         "",
       ].join("\n"),
     );
   }
+
+  if (desactivado) return;
 
   if (!correoHabilitado) {
     if (process.env.NODE_ENV !== "production") return;
@@ -39,6 +84,8 @@ export async function enviarEmail({ para, asunto, texto, html }: Mensaje) {
         "Faltan SENDGRID_API_KEY o EMAIL.",
     );
   }
+
+  const logo = conLogo && html ? logoBase64() : null;
 
   const res = await fetch(SENDGRID_URL, {
     method: "POST",
@@ -50,10 +97,25 @@ export async function enviarEmail({ para, asunto, texto, html }: Mensaje) {
       personalizations: [{ to: [{ email: para }] }],
       from: { email: env.EMAIL, name: env.EMAIL_NOMBRE },
       subject: asunto,
+      // El texto plano va primero: es el orden que exige la API y el que
+      // usan los clientes que no muestran HTML.
       content: [
         { type: "text/plain", value: texto },
         ...(html ? [{ type: "text/html", value: html }] : []),
       ],
+      ...(logo
+        ? {
+            attachments: [
+              {
+                content: logo,
+                filename: "intimate.png",
+                type: "image/png",
+                disposition: "inline",
+                content_id: LOGO_CID,
+              },
+            ],
+          }
+        : {}),
       // Sin rastreo de apertura ni de clics: este producto no espía a nadie.
       tracking_settings: {
         click_tracking: { enable: false },
@@ -69,46 +131,4 @@ export async function enviarEmail({ para, asunto, texto, html }: Mensaje) {
       `SendGrid devolvió ${res.status}. ${detalle.slice(0, 300)}`.trim(),
     );
   }
-}
-
-/**
- * Plantilla del correo con el código de acceso.
- * HTML en tabla y con estilos en línea: es lo único que renderizan bien los
- * clientes de correo, que no entienden hojas de estilo modernas.
- */
-export function plantillaCodigo(otp: string, minutos: number) {
-  const texto = [
-    `Tu código para entrar a Intimate es: ${otp}`,
-    "",
-    `Caduca en ${minutos} minutos y solo sirve una vez.`,
-    "Si no fuiste tú, puedes ignorar este mensaje.",
-  ].join("\n");
-
-  const html = `<!doctype html>
-<html lang="es">
-  <body style="margin:0;padding:32px 16px;background:#f8f4f1;font-family:Helvetica,Arial,sans-serif;color:#433636;">
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:480px;margin:0 auto;">
-      <tr>
-        <td style="padding-bottom:24px;font-size:20px;font-weight:bold;">Intimate</td>
-      </tr>
-      <tr>
-        <td style="background:#ffffff;border-radius:20px;padding:32px;">
-          <p style="margin:0 0 8px;font-size:16px;">Tu código para entrar:</p>
-          <p style="margin:0 0 24px;font-size:38px;font-weight:bold;letter-spacing:8px;">${otp}</p>
-          <p style="margin:0;font-size:14px;color:#6b5d5d;line-height:1.6;">
-            Caduca en ${minutos} minutos y solo sirve una vez.<br />
-            Si no fuiste tú, puedes ignorar este mensaje.
-          </p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding-top:24px;font-size:12px;color:#6b5d5d;line-height:1.6;">
-          Intimate acompaña, no reemplaza la Biblia, la iglesia ni la consejería pastoral.
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>`;
-
-  return { texto, html };
 }

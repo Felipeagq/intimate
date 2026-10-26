@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { CerrarSesion } from "./cerrar-sesion";
+import { SubirFoto } from "@/components/subir-foto";
 import { ZonaDelicada } from "./zona-delicada";
 import { contextoApp } from "@/server/session";
 import { formatDate } from "@/lib/utils";
@@ -17,6 +18,14 @@ export default async function AjustesPage() {
       <PageHeader eyebrow="Ajustes" title="Tu cuenta" />
 
       <div className="space-y-4">
+        <Card className="p-6">
+          <h2 className="text-xl">Tu foto</h2>
+          <p className="text-muted mt-2 mb-5 text-sm leading-relaxed">
+            Es lo que ve tu pareja en el espacio de los dos.
+          </p>
+          <SubirFoto urlActual={ctx.fotoUrl} nombre={ctx.nombre} />
+        </Card>
+
         <Card className="p-6">
           <h2 className="text-xl">Cuenta</h2>
           <dl className="mt-4 space-y-3 text-sm">

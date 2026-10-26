@@ -3,6 +3,7 @@ import { Settings, UserPlus } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { BottomNav, Sidebar } from "@/components/app-nav";
 import { Card } from "@/components/ui/card";
+import { Avatar, AvatarPareja } from "@/components/ui/avatar";
 import { contextoApp } from "@/server/session";
 import { rachaDePareja } from "@/server/modules/oracion";
 
@@ -27,6 +28,14 @@ export default async function AppLayout({
 
           {ctx.pareja ? (
             <Card className="p-4">
+              <AvatarPareja
+                unoUrl={ctx.fotoUrl}
+                unoNombre={ctx.nombre}
+                dosUrl={ctx.parejaFotoUrl}
+                dosNombre={ctx.pareja.parejaNombre}
+                tamano="sm"
+                className="mb-3"
+              />
               <p className="text-muted text-xs">Racha de pareja</p>
               <p className="mt-1 font-display text-3xl">
                 {racha}
@@ -74,9 +83,15 @@ export default async function AppLayout({
           <Link
             href="/ajustes"
             aria-label={`Ajustes de ${ctx.email}`}
-            className="glass glass-hover flex size-11 cursor-pointer items-center justify-center"
+            className="flex cursor-pointer items-center"
           >
-            <Settings className="size-5" aria-hidden />
+            {ctx.fotoUrl ? (
+              <Avatar url={ctx.fotoUrl} nombre={ctx.nombre} tamano="md" />
+            ) : (
+              <span className="glass glass-hover flex size-11 items-center justify-center">
+                <Settings className="size-5" aria-hidden />
+              </span>
+            )}
           </Link>
         </header>
 

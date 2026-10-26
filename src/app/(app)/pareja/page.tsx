@@ -3,6 +3,7 @@ import { UserPlus } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { buttonStyles } from "@/components/ui/button";
+import { AvatarPareja } from "@/components/ui/avatar";
 import { PanelPareja } from "./panel-pareja";
 import { contextoApp } from "@/server/session";
 import { checkinDeLaSemana, avancePlan } from "@/server/modules/checkin";
@@ -47,6 +48,17 @@ export default async function ParejaPage() {
 
   return (
     <div>
+      {/* Las dos fotos, superpuestas: lo primero que se ve al entrar. */}
+      <div className="mb-6 flex justify-center">
+        <AvatarPareja
+          unoUrl={ctx.fotoUrl}
+          unoNombre={ctx.nombre}
+          dosUrl={ctx.parejaFotoUrl}
+          dosNombre={ctx.pareja.parejaNombre}
+          tamano="xl"
+        />
+      </div>
+
       <PageHeader
         eyebrow="Espacio de pareja"
         title={`${ctx.nombre} y ${ctx.pareja.parejaNombre}`}

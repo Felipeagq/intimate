@@ -25,6 +25,24 @@ const schema = z.object({
   SENDGRID_API_KEY: z.string().startsWith("SG.").optional(),
   EMAIL: z.string().email("EMAIL debe ser el correo remitente").optional(),
   EMAIL_NOMBRE: z.string().default("Intimate"),
+
+  // Fotos de perfil. El bucket es privado: las imágenes se sirven con
+  // enlaces firmados que caducan, nunca como archivos públicos que pueda
+  // ver cualquiera que adivine la ruta.
+  //
+  // Las credenciales llevan prefijo S3_ a propósito: AWS_ACCESS_KEY_ID y
+  // AWS_SECRET_ACCESS_KEY son nombres reservados por el runtime de Lambda,
+  // donde corre el cómputo de Amplify. Ahí las inyecta el rol de ejecución,
+  // así que definirlas a mano no funcionaría.
+  S3_BUCKET: z.string().min(1).optional(),
+  S3_REGION: z.string().min(1).optional(),
+  /** Carpeta dentro del bucket. Vacío = raíz. */
+  S3_FOLDER: z
+    .string()
+    .optional()
+    .transform((v) => v?.replace(/^\/+|\/+$/g, "") || ""),
+  S3_AWS_ACCESS_KEY_ID: z.string().min(1).optional(),
+  S3_AWS_SECRET_ACCESS_KEY: z.string().min(1).optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -43,3 +61,10 @@ export const googleHabilitado = Boolean(
 );
 
 export const correoHabilitado = Boolean(env.SENDGRID_API_KEY && env.EMAIL);
+
+export const almacenamientoHabilitado = Boolean(
+  env.S3_BUCKET &&
+    env.S3_REGION &&
+    env.S3_AWS_ACCESS_KEY_ID &&
+    env.S3_AWS_SECRET_ACCESS_KEY,
+);
