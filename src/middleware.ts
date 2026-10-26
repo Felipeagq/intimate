@@ -7,6 +7,8 @@ const RUTAS_ADMIN_PUBLICAS = [
   "/admin/verificar",
   "/admin/configurar-mfa",
   "/admin/sin-permiso",
+  // Quien abre esto todavía no tiene cuenta del equipo, por definición.
+  "/admin/invitacion",
 ];
 
 /**

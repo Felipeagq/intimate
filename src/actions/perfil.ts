@@ -6,6 +6,7 @@ import { z } from "zod";
 import { contextoApp } from "@/server/session";
 import { db } from "@/server/db/client";
 import { user } from "@/server/db/schema";
+import { esZonaValida } from "@/server/modules/zona";
 
 type Resultado = { ok: true } | { ok: false; error: string };
 
@@ -58,5 +59,40 @@ export async function actualizarPerfil(entrada: {
       return { ok: false, error: e.issues[0]?.message ?? "Datos inválidos." };
     }
     return { ok: false, error: "No pudimos guardar los cambios." };
+  }
+}
+
+/**
+ * Fija la zona horaria.
+ *
+ * `automatica` viene de la detección del navegador. En ese caso solo se
+ * aplica si la persona todavía no confirmó ninguna: si ya eligió una a
+ * mano, un viaje o un navegador mal configurado no puede cambiársela sin
+ * avisar, porque eso mueve el día en que cuenta cada oración.
+ */
+export async function fijarZonaHoraria(
+  zona: string,
+  automatica: boolean,
+): Promise<Resultado> {
+  try {
+    const ctx = await contextoApp();
+
+    if (!esZonaValida(zona)) {
+      return { ok: false, error: "Esa zona horaria no es válida." };
+    }
+
+    if (automatica && ctx.zonaConfirmada) return { ok: true };
+
+    await db
+      .update(user)
+      .set({ zonaHoraria: zona, zonaConfirmada: true, updatedAt: new Date() })
+      .where(eq(user.id, ctx.userId));
+
+    for (const ruta of ["/ajustes", "/inicio", "/oracion", "/pareja"]) {
+      revalidatePath(ruta);
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "No pudimos guardar la zona horaria." };
   }
 }

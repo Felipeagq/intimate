@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Ban, RotateCcw, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, Ban, ChevronRight, RotateCcw, Search, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -125,7 +126,16 @@ export function TablaCuentas({
                     className="border-ink-700/8 border-b last:border-0 dark:border-white/8"
                   >
                     <td className="px-5 py-4">
-                      <p className="font-medium">{c.email}</p>
+                      <Link
+                        href={`/admin/soporte/${c.id}`}
+                        className="hover:text-accent group flex cursor-pointer items-center gap-1 font-medium transition-colors duration-200"
+                      >
+                        {c.email}
+                        <ChevronRight
+                          className="text-muted size-3.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                          aria-hidden
+                        />
+                      </Link>
                       <p className="text-muted font-mono text-xs">
                         {c.id.slice(0, 12)}…
                       </p>

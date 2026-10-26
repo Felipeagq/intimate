@@ -13,6 +13,7 @@ export const user = pgTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   zonaHoraria: text("zona_horaria").default("America/Bogota"),
+  zonaConfirmada: boolean("zona_confirmada").default(false),
   telefono: text("telefono"),
   estado: text("estado").default("activa"),
 });

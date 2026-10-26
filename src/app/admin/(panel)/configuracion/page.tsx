@@ -1,23 +1,26 @@
-import { KeyRound, Users, Flag, BookOpen } from "lucide-react";
+import { Users, Flag, BookOpen } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { requerirAdmin } from "@/server/admin-session";
 import { listarEquipo } from "@/server/modules/admin";
+import { listarInvitacionesPendientes } from "@/server/modules/equipo";
+import { PanelEquipo } from "./panel-equipo";
 import {
   PREGUNTAS_CHECKIN,
   TEMAS_PLAN,
   PLANTILLAS_ACUERDO,
 } from "@/content/plan-noviazgo";
-import { formatDate } from "@/lib/utils";
 
 export const metadata = { title: "Configuración" };
 
-const TONO_ROL = { admin: "honey", soporte: "info", lectura: "neutral" } as const;
-
 export default async function ConfiguracionPage() {
-  await requerirAdmin(["admin"]);
-  const equipo = await listarEquipo();
+  const sesion = await requerirAdmin(["admin"]);
+
+  const [equipo, invitaciones] = await Promise.all([
+    listarEquipo(),
+    listarInvitacionesPendientes(),
+  ]);
 
   return (
     <div>
@@ -37,34 +40,28 @@ export default async function ConfiguracionPage() {
             <Badge tone="neutral">{equipo.length} cuentas</Badge>
           </div>
 
-          <ul className="mt-4 space-y-1">
-            {equipo.map((m) => (
-              <li
-                key={m.id}
-                className="border-ink-700/8 flex flex-wrap items-center justify-between gap-3 border-b py-3 last:border-0 dark:border-white/8"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{m.email}</p>
-                  <p className="text-muted flex items-center gap-1.5 text-xs">
-                    <KeyRound className="size-3" aria-hidden />
-                    {m.mfa ? "segundo factor activo" : "sin segundo factor"} ·
-                    desde el {formatDate(m.creada)}
-                  </p>
-                </div>
-                <Badge tone={TONO_ROL[m.rol as keyof typeof TONO_ROL] ?? "neutral"}>
-                  {m.rol}
-                </Badge>
-              </li>
-            ))}
-          </ul>
+          <PanelEquipo
+            miCorreo={sesion.email}
+            equipo={equipo.map((m) => ({
+              id: m.id,
+              email: m.email,
+              rol: m.rol ?? "lectura",
+              mfa: Boolean(m.mfa),
+              creada: m.creada.toISOString(),
+            }))}
+            invitaciones={invitaciones.map((i) => ({
+              id: i.id,
+              email: i.email,
+              rol: i.rol,
+              expiraEn: i.expiraEn.toISOString(),
+            }))}
+          />
 
           <p className="text-muted mt-4 text-xs leading-relaxed">
-            Las cuentas del equipo se crean con{" "}
-            <code className="bg-ink-700/8 rounded px-1.5 py-0.5 font-mono dark:bg-white/10">
-              pnpm seed:admin
-            </code>
-            . Crearlas desde el panel todavía no está construido. El registro
-            público está desactivado, así que no hay otra forma de entrar.
+            El segundo factor es obligatorio para todo el equipo. La sesión
+            del panel dura 8 horas y no sirve en la app, ni la de la app aquí.
+            El registro público está desactivado: solo se entra por
+            invitación.
           </p>
         </Card>
 
@@ -111,7 +108,6 @@ export default async function ConfiguracionPage() {
           <ul className="text-muted mt-4 space-y-2 text-sm leading-relaxed">
             <li>· Feature flags y versión mínima de la app</li>
             <li>· Textos de notificaciones editables</li>
-            <li>· Invitar cuentas del equipo desde el panel</li>
             <li>· Recordatorios programados y exportación de datos</li>
           </ul>
           <p className="text-muted mt-4 text-xs leading-relaxed">

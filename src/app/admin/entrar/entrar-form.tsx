@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ShieldCheck } from "lucide-react";
+import { AlertCircle, Check, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { adminClient } from "@/lib/auth-admin-client";
 
-export function AdminEntrarForm() {
+export function AdminEntrarForm({
+  cuentaCreada = false,
+}: {
+  cuentaCreada?: boolean;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
@@ -47,6 +51,13 @@ export function AdminEntrarForm() {
         Solo para cuentas del equipo, con segundo factor obligatorio. Esta
         sesión no sirve para entrar como usuario de la app.
       </p>
+
+      {cuentaCreada && (
+        <p className="mt-4 flex items-center gap-2 rounded-2xl bg-emerald-600/12 px-4 py-3 text-sm text-emerald-900 dark:text-emerald-200">
+          <Check className="size-4 shrink-0" aria-hidden />
+          Tu cuenta quedó creada. Entra con tu correo y tu contraseña nueva.
+        </p>
+      )}
 
       <form onSubmit={entrar} className="mt-6 space-y-4">
         <Field htmlFor="admin-email" label="Correo del equipo">

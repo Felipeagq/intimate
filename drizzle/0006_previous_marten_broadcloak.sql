@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "zona_confirmada" boolean DEFAULT false;

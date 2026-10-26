@@ -39,8 +39,9 @@ export function Avatar({
       )}
     >
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element -- la URL está
-        // firmada y caduca; el optimizador de Next la reescribiría y rompería.
+        // La URL está firmada y caduca: el optimizador de Next la
+        // reescribiría y la rompería, así que aquí va un <img> a propósito.
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={url}
           alt={`Foto de ${nombre}`}

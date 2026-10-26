@@ -6,6 +6,7 @@ import * as schema from "./schema";
 import * as adminSchema from "./schema-admin";
 import * as appSchema from "./schema-app";
 import * as auditSchema from "./schema-audit";
+import * as adminInvitesSchema from "./schema-admin-invites";
 
 /**
  * Driver WebSocket, no HTTP.
@@ -34,6 +35,12 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export const db = drizzle(pool, {
-  schema: { ...schema, ...adminSchema, ...appSchema, ...auditSchema },
+  schema: {
+    ...schema,
+    ...adminSchema,
+    ...appSchema,
+    ...auditSchema,
+    ...adminInvitesSchema,
+  },
 });
 export type Db = typeof db;

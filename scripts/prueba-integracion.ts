@@ -11,11 +11,12 @@
  *
  * Borra todo lo que crea al terminar, incluso si una comprobación falla.
  */
-import { eq, inArray } from "drizzle-orm";
+import { eq, ilike, inArray } from "drizzle-orm";
 import { auth } from "../src/server/auth";
 import { db } from "../src/server/db/client";
 import { user } from "../src/server/db/schema";
 import { couples } from "../src/server/db/schema-app";
+import { auditEvents } from "../src/server/db/schema-audit";
 import * as pareja from "../src/server/modules/pareja";
 import * as oracion from "../src/server/modules/oracion";
 import * as devocional from "../src/server/modules/devocional";
@@ -23,6 +24,7 @@ import * as promesas from "../src/server/modules/promesas";
 import * as acuerdos from "../src/server/modules/acuerdos";
 import * as checkin from "../src/server/modules/checkin";
 import * as admin from "../src/server/modules/admin";
+import * as auditoria from "../src/server/modules/auditoria";
 import { calcularRacha } from "../src/server/modules/fecha";
 
 const ZONA = "America/Bogota";
@@ -47,6 +49,12 @@ async function crearUsuario(email: string) {
 }
 
 async function limpiar() {
+  // El evento de auditoría de prueba no cae por cascada desde el usuario:
+  // vive en una tabla aparte y sin relación declarada.
+  for (const correo of CORREOS) {
+    await db.delete(auditEvents).where(ilike(auditEvents.objetivo, `%${correo}%`));
+  }
+
   const existentes = await db
     .select({ id: user.id })
     .from(user)
@@ -220,6 +228,81 @@ async function main() {
     !JSON.stringify(cuentas).includes("Dios me dijo"),
   );
 
+  console.log("\n— Panel: seguimiento del producto —");
+  const rachas = await admin.distribucionDeRachas();
+  comprobar("la distribución tiene los seis tramos", rachas.length === 6);
+  comprobar(
+    "la pareja de prueba cae en el tramo de 1 a 3 días",
+    (rachas.find((b) => b.bucket === "1-3")?.parejas ?? 0) >= 1,
+  );
+
+  const embudo = await admin.embudoActivacion();
+  comprobar("el embudo tiene cinco pasos", embudo.length === 5);
+  comprobar(
+    "cuenta que la invitación fue aceptada",
+    (embudo.find((p) => p.paso === "La pareja aceptó")?.valor ?? 0) >= 1,
+  );
+  comprobar(
+    "cuenta el primer devocional juntos",
+    (embudo.find((p) => p.paso === "Primer devocional juntos")?.valor ?? 0) >= 1,
+  );
+
+  const modulos = await admin.desgloseModulos();
+  const mod = (nombre: string) =>
+    modulos.find((m) => m.modulo === nombre)?.estaSemana ?? 0;
+  comprobar("el desglose cubre los siete módulos", modulos.length === 7);
+  comprobar("cuenta el devocional de pareja", mod("Devocional de pareja") >= 1);
+  comprobar("cuenta las promesas", mod("Promesas guardadas") >= 1);
+  comprobar("cuenta los acuerdos", mod("Acuerdos propuestos") >= 1);
+  comprobar("cuenta los dos check-ins", mod("Check-ins respondidos") >= 2);
+  comprobar(
+    "el devocional personal no se mezcla con el de pareja",
+    mod("Devocional personal") === 0 || mod("Devocional personal") !== mod("Devocional de pareja"),
+  );
+
+  const cohortes = await admin.retencionPorCohorte();
+  comprobar("la tabla de cohortes tiene ocho filas", cohortes.length === 8);
+  comprobar(
+    "cada fila trae cuatro semanas",
+    cohortes.every((c) => c.semanas.length === 4),
+  );
+  comprobar(
+    "los porcentajes están entre 0 y 100, o son null si aún no hay dato",
+    cohortes.every((c) =>
+      c.semanas.every((s) => s === null || (s >= 0 && s <= 100)),
+    ),
+  );
+
+  console.log("\n— Detalle de cuenta (soporte) —");
+  const detalleAna = await admin.obtenerDetalleCuenta(ana.id);
+  comprobar("el detalle existe", detalleAna !== null);
+  comprobar(
+    "muestra la pareja activa con el correo correcto",
+    detalleAna?.pareja?.estado === "activa" &&
+      detalleAna.pareja.email === beto.email,
+  );
+  comprobar(
+    "sin archivar todavía, archivadaEn es null",
+    detalleAna?.pareja?.archivadaEn === null,
+  );
+
+  await auditoria.registrarEvento({
+    actor: "prueba@feanware.com",
+    rol: "soporte",
+    accion: "cuenta.consultar",
+    objetivo: ana.email,
+  });
+  const eventosAna = await auditoria.eventosDeCuenta(ana.email);
+  comprobar(
+    "el filtro de auditoría encuentra el evento por correo",
+    eventosAna.some((e) => e.accion === "cuenta.consultar"),
+  );
+  const eventosBeto = await auditoria.eventosDeCuenta(beto.email);
+  comprobar(
+    "y no mezcla eventos de otra cuenta",
+    !eventosBeto.some((e) => e.accion === "cuenta.consultar"),
+  );
+
   console.log("\n— Desvinculación —");
   await pareja.desvincular(ana.id);
   comprobar(
@@ -233,6 +316,14 @@ async function main() {
     sinAcceso = true;
   }
   comprobar("y el espacio compartido deja de ser accesible", sinAcceso);
+
+  const detalleTrasSalir = await admin.obtenerDetalleCuenta(ana.id);
+  comprobar(
+    "el detalle sigue mostrando con quién estuvo, ahora archivada",
+    detalleTrasSalir?.pareja?.estado === "archivada" &&
+      detalleTrasSalir.pareja.email === beto.email &&
+      detalleTrasSalir.pareja.archivadaEn !== null,
+  );
 }
 
 main()

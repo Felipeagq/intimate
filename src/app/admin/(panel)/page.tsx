@@ -1,12 +1,23 @@
-import { TrendingUp, TrendingDown, ShieldCheck, Minus } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { TarjetaMetrica } from "./tarjeta-metrica";
 import { PageHeader } from "@/components/ui/page-header";
 import { requerirAdmin } from "@/server/admin-session";
 import {
   obtenerMetricas,
   serieParejasActivas,
   usuariosActivosDesde,
+  distribucionDeRachas,
+  embudoActivacion,
+  retencionPorCohorte,
+  desgloseModulos,
 } from "@/server/modules/admin";
+import {
+  DesgloseModulos,
+  DistribucionRachas,
+  Embudo,
+  RetencionCohortes,
+} from "./graficos";
 import { cn, formatDate } from "@/lib/utils";
 
 export const metadata = { title: "Dashboard" };
@@ -14,11 +25,19 @@ export const metadata = { title: "Dashboard" };
 export default async function AdminDashboard() {
   await requerirAdmin();
 
-  const [metricas, serie, activos7] = await Promise.all([
-    obtenerMetricas(),
-    serieParejasActivas(),
-    usuariosActivosDesde(7),
-  ]);
+  const [metricas, serie, activos7, rachas, cohortes, modulos] =
+    await Promise.all([
+      obtenerMetricas(),
+      serieParejasActivas(),
+      usuariosActivosDesde(7),
+      distribucionDeRachas(),
+      retencionPorCohorte(),
+      desgloseModulos(),
+    ]);
+
+  // El embudo reutiliza la distribución ya calculada en lugar de recorrer
+  // todas las parejas otra vez.
+  const embudo = await embudoActivacion(rachas);
 
   const tarjetas = [
     {
@@ -32,7 +51,10 @@ export default async function AdminDashboard() {
       dato: { valor: activos7, delta: null },
     },
     { label: "Parejas vinculadas", dato: metricas.parejasVinculadas },
-    { label: "Devocionales esta semana", dato: metricas.devocionalesSemana },
+    {
+      label: "Devocionales de pareja esta semana",
+      dato: metricas.devocionalesSemana,
+    },
     {
       label: "Invitaciones aceptadas",
       dato: metricas.aceptacionInvitacion,
@@ -51,36 +73,29 @@ export default async function AdminDashboard() {
         description="Solo datos agregados. Ninguna pantalla del panel muestra contenido escrito por un usuario."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {tarjetas.map(({ label, dato, nota, sufijo }) => {
-          const sube = (dato.delta ?? 0) >= 0;
-          const Icono =
-            dato.delta === null ? Minus : sube ? TrendingUp : TrendingDown;
+      {/* Dos por fila en teléfono; la métrica norte ocupa el ancho completo.
+          Si queda una suelta al final, también lo ocupa, para no dejar un
+          hueco. En escritorio son tres columnas y no hace falta nada de eso. */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
+        {tarjetas.map(({ label, dato, nota, sufijo }, i) => {
+          const esPrimera = i === 0;
+          const quedaSuelta =
+            i === tarjetas.length - 1 && (tarjetas.length - 1) % 2 === 1;
+
           return (
-            <Card key={label} flat className="p-5">
-              <p className="text-muted text-sm">{label}</p>
-              <div className="mt-2 flex items-baseline gap-3">
-                <p className="font-display text-4xl">
-                  {dato.valor.toLocaleString("es")}
-                  {sufijo}
-                </p>
-                {dato.delta !== null && (
-                  <span
-                    className={cn(
-                      "flex items-center gap-1 text-sm font-medium",
-                      sube
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-amber-800 dark:text-amber-300",
-                    )}
-                  >
-                    <Icono className="size-4" aria-hidden />
-                    {sube ? "+" : ""}
-                    {dato.delta}%
-                  </span>
-                )}
-              </div>
-              {nota && <p className="text-muted mt-2 text-xs">{nota}</p>}
-            </Card>
+            <TarjetaMetrica
+              key={label}
+              label={label}
+              dato={dato}
+              nota={nota}
+              sufijo={sufijo}
+              destacada={esPrimera}
+              className={
+                esPrimera || quedaSuelta
+                  ? "col-span-2 lg:col-span-1"
+                  : undefined
+              }
+            />
           );
         })}
       </div>
@@ -150,6 +165,17 @@ export default async function AdminDashboard() {
           </>
         )}
       </Card>
+
+      <div className="mt-4 space-y-4">
+        <Embudo pasos={embudo} />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <DistribucionRachas buckets={rachas} />
+          <DesgloseModulos filas={modulos} />
+        </div>
+
+        <RetencionCohortes filas={cohortes} />
+      </div>
 
       <Card flat className="mt-4 flex items-start gap-3 p-5">
         <ShieldCheck className="text-accent mt-0.5 size-5 shrink-0" aria-hidden />

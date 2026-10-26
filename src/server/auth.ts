@@ -26,6 +26,16 @@ export const auth = betterAuth({
         required: false,
         defaultValue: "America/Bogota",
       },
+      // false hasta que la zona se detecta del navegador o la elige la
+      // persona. Sin esta marca no hay forma de distinguir "nunca la
+      // eligió" de "eligió Bogotá", y la detección automática pisaría una
+      // decisión explícita.
+      zonaConfirmada: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
       // Sin verificar. Antes de usarlo para avisos por SMS o WhatsApp hay
       // que confirmarlo con un código: un teléfono que nadie comprobó no
       // sirve como canal de seguridad.

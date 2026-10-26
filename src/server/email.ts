@@ -5,6 +5,7 @@ export {
   plantillaCodigo,
   plantillaPrueba,
   plantillaVinculacion,
+  plantillaInvitacionEquipo,
 } from "./plantillas-correo";
 
 /**

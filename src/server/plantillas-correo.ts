@@ -379,3 +379,83 @@ export function plantillaPrueba() {
     ),
   };
 }
+
+const NOMBRE_ROL: Record<string, string> = {
+  admin: "admin",
+  soporte: "soporte",
+  lectura: "lectura",
+};
+
+export function plantillaInvitacionEquipo({
+  invitadoPor,
+  rol,
+  enlace,
+  horasVigencia,
+}: {
+  invitadoPor: string;
+  rol: string;
+  enlace: string;
+  horasVigencia: number;
+}) {
+  const rolTexto = NOMBRE_ROL[rol] ?? rol;
+
+  const texto = [
+    `${invitadoPor} te invitó al panel de Intimate, con el rol de ${rolTexto}.`,
+    "",
+    `Acepta la invitación y elige tu contraseña: ${enlace}`,
+    "",
+    `El enlace caduca en ${horasVigencia} horas y solo sirve una vez.`,
+    "Si no esperabas esta invitación, puedes ignorar este mensaje.",
+  ].join("\n");
+
+  const principal = `
+                  <div style="font-family:${SERIF};font-size:24px;line-height:1.25;font-weight:bold;color:${CHOCOLATE};">
+                    Te invitaron al panel
+                  </div>
+                  <p style="margin:10px 0 0;font-size:15px;line-height:1.65;color:${ATENUADO};">
+                    <strong style="color:${CHOCOLATE};">${invitadoPor}</strong> te
+                    invitó a entrar con el rol de
+                    <strong style="color:${CHOCOLATE};">${rolTexto}</strong>.
+                  </p>
+${lista([
+  "Elige tu propia contraseña al aceptar: nadie más la conoce, ni quien te invitó",
+  "El segundo factor se configura justo después, es obligatorio para todo el equipo",
+])}
+${boton("Aceptar invitación", enlace)}
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0 0;">
+                    <tr>
+                      <td style="border-top:1px solid ${BORDE};padding-top:20px;font-size:14px;line-height:1.7;color:${ATENUADO};">
+                        El enlace caduca en <strong style="color:${DORADO};">${horasVigencia} horas</strong>
+                        y solo sirve una vez.
+                      </td>
+                    </tr>
+                  </table>`;
+
+  const seguridad = `
+        <tr>
+          <td style="padding-top:14px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                   style="background-color:${AMARILLO_SUAVE};border:1px solid ${AMARILLO};border-radius:20px;">
+              <tr>
+                <td style="padding:20px 24px;font-family:${FUENTE};">
+                  <div style="font-size:14px;font-weight:bold;color:${DORADO};">
+                    ¿No esperabas esta invitación?
+                  </div>
+                  <p style="margin:6px 0 0;font-size:14px;line-height:1.65;color:${CHOCOLATE};">
+                    Ignora este mensaje. El enlace caduca solo y nadie puede
+                    entrar sin él.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`;
+
+  return {
+    texto,
+    html: envoltorio(
+      `${cabecera()}${tarjeta(principal)}${seguridad}${pie()}`,
+      `${invitadoPor} te invitó al panel de Intimate`,
+    ),
+  };
+}

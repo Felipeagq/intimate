@@ -14,7 +14,8 @@
     "db:limpiar": "tsx --env-file=.env scripts/limpiar-datos-prueba.ts",
     "email:probar": "tsx --env-file=.env scripts/probar-correo.ts",
     "build:check": "NEXT_DIST_DIR=.next-build next build",
-    "test:integracion": "CORREO_DESACTIVADO=1 tsx --env-file=.env scripts/prueba-integracion.ts"
+    "test:integracion": "CORREO_DESACTIVADO=1 tsx --env-file=.env scripts/prueba-integracion.ts",
+    "test:invitacion": "CORREO_DESACTIVADO=1 tsx --env-file=.env scripts/prueba-invitacion-equipo.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1156.0",

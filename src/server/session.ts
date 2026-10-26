@@ -31,6 +31,8 @@ export type ContextoApp = {
   nombreCompleto: string;
   telefono: string | null;
   zona: string;
+  /** false hasta que se detecta del navegador o la elige la persona. */
+  zonaConfirmada: boolean;
   /** Enlace firmado, caduca en una hora. */
   fotoUrl: string | null;
   parejaFotoUrl: string | null;
@@ -53,6 +55,7 @@ export async function contextoApp(): Promise<ContextoApp> {
       image: true,
       telefono: true,
       zonaHoraria: true,
+      zonaConfirmada: true,
       estado: true,
     },
   });
@@ -83,6 +86,7 @@ export async function contextoApp(): Promise<ContextoApp> {
     nombreCompleto,
     telefono: perfil.telefono ?? null,
     zona,
+    zonaConfirmada: Boolean(perfil.zonaConfirmada),
     fotoUrl,
     parejaFotoUrl,
     pareja,
