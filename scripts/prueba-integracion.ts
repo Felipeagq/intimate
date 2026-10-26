@@ -26,6 +26,11 @@ import * as checkin from "../src/server/modules/checkin";
 import * as admin from "../src/server/modules/admin";
 import * as auditoria from "../src/server/modules/auditoria";
 import { calcularRacha, fechaLocal } from "../src/server/modules/fecha";
+import {
+  plantillaInvitacionEquipo,
+  plantillaRespuestaSoporte,
+  plantillaVinculacion,
+} from "../src/server/email";
 import { desfaseDe, esZonaValida, listarZonas } from "../src/server/modules/zona";
 import {
   LIBROS,
@@ -191,6 +196,37 @@ async function main() {
       return true;
     })(),
   );
+
+  console.log("\n— Correos: texto de usuarios dentro del HTML —");
+  // Quien se pone como nombre una etiqueta no debe poder meterla en el
+  // correo que recibe su pareja.
+  const malo = `<img src=x onerror=alert(1)>"Ana" & <b>Co</b>`;
+  const vinc = plantillaVinculacion({
+    nombreOtro: malo,
+    emailOtro: `a"><script>alert(1)</script>@x.com`,
+    invitaste: true,
+    baseUrl: "http://localhost:3000",
+  });
+  comprobar("el nombre no inyecta etiquetas", !vinc.html.includes("<img src=x") && !vinc.html.includes("<b>Co</b>"));
+  comprobar("el correo no puede cerrar el atributo ni abrir un script", !vinc.html.includes("<script>") && !vinc.html.includes('a">'));
+  comprobar("pero el texto escapado sí aparece, legible", vinc.html.includes("&lt;img src=x"));
+  comprobar("el texto plano conserva el nombre tal cual", vinc.texto.includes(malo));
+
+  const resp = plantillaRespuestaSoporte({
+    respuesta: "Hola <script>alert(1)</script>\nsegunda línea & más",
+    enlaceAyuda: "http://localhost:3000/ayuda",
+  });
+  comprobar("la respuesta de soporte escapa el HTML", !resp.html.includes("<script>") && resp.html.includes("&lt;script&gt;"));
+  comprobar("conserva los saltos de línea de quien responde", resp.html.includes("<br>"));
+  comprobar("y el ampersand", resp.html.includes("&amp; más"));
+
+  const inv = plantillaInvitacionEquipo({
+    invitadoPor: `<i>x</i>@feanware.com`,
+    rol: "admin",
+    enlace: "http://localhost:3000/admin/invitacion/abc",
+    horasVigencia: 72,
+  });
+  comprobar("la invitación al equipo escapa quién invita", !inv.html.includes("<i>x</i>") && inv.html.includes("&lt;i&gt;"));
 
   console.log("\n— Vinculación de pareja —");
   const ana = await crearUsuario(CORREOS[0]);
