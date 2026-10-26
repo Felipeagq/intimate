@@ -155,31 +155,39 @@ export default async function InicioPage() {
         nombrePareja={ctx.pareja?.parejaNombre ?? null}
       />
 
-      {/* --- Rachas --- */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="p-5">
+      {/* --- Rachas, en una sola tarjeta de tres columnas --- */}
+      <Card className="divide-ink-700/10 grid grid-cols-3 divide-x p-5 dark:divide-white/10">
+        <div className="flex flex-col items-center px-1 text-center">
           <Flame
             className={ctx.pareja ? "text-accent size-5" : "text-muted size-5"}
             aria-hidden
           />
-          <p className="mt-3 font-display text-4xl">
+          <p className="mt-2 font-display text-2xl sm:text-3xl">
             {ctx.pareja ? racha : "—"}
           </p>
-          <p className="text-muted mt-1 text-sm">Racha de pareja</p>
-        </Card>
-        <Card className="p-5">
+          <p className="text-muted mt-1 text-xs leading-tight">
+            Racha de pareja
+          </p>
+        </div>
+        <div className="flex flex-col items-center px-1 text-center">
           <Flame className="text-muted size-5" aria-hidden />
-          <p className="mt-3 font-display text-4xl">{metricas.racha}</p>
-          <p className="text-muted mt-1 text-sm">Tu racha personal</p>
-        </Card>
-        <Card className="p-5">
+          <p className="mt-2 font-display text-2xl sm:text-3xl">
+            {metricas.racha}
+          </p>
+          <p className="text-muted mt-1 text-xs leading-tight">
+            Tu racha personal
+          </p>
+        </div>
+        <div className="flex flex-col items-center px-1 text-center">
           <Check className="text-muted size-5" aria-hidden />
-          <p className="mt-3 font-display text-4xl">
+          <p className="mt-2 font-display text-2xl sm:text-3xl">
             {metricas.constanciaDelMes}%
           </p>
-          <p className="text-muted mt-1 text-sm">Constancia del mes</p>
-        </Card>
-      </div>
+          <p className="text-muted mt-1 text-xs leading-tight">
+            Constancia del mes
+          </p>
+        </div>
+      </Card>
 
       {/* --- Check-in semanal --- */}
       {checkin && !checkin.revelado && (
