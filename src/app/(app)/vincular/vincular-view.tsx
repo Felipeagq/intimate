@@ -63,7 +63,7 @@ export function VincularView() {
       {modo === "invitar" ? (
         <Card className="p-7">
           <p className="text-muted text-sm">Tu código de invitación</p>
-          <p className="font-[family-name:var(--font-display)] mt-3 text-5xl tracking-[0.2em]">
+          <p className="font-display mt-3 text-5xl tracking-[0.2em]">
             {CODIGO}
           </p>
 
@@ -106,7 +106,7 @@ export function VincularView() {
                 maxLength={6}
                 autoCapitalize="characters"
                 placeholder="A1B2C3"
-                className="text-center font-[family-name:var(--font-display)] text-2xl tracking-[0.3em] uppercase"
+                className="text-center font-display text-2xl tracking-[0.3em] uppercase"
               />
             </Field>
             <Button type="submit" className="mt-4 w-full">

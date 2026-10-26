@@ -27,14 +27,14 @@ export default function PromesasPage() {
 
       <Card className="mb-4 flex flex-wrap items-center gap-6 p-5">
         <div>
-          <p className="font-[family-name:var(--font-display)] text-3xl">
+          <p className="font-display text-3xl">
             {promesas.length}
           </p>
           <p className="text-muted text-sm">guardadas</p>
         </div>
         <div className="bg-ink-700/10 h-10 w-px dark:bg-white/10" aria-hidden />
         <div>
-          <p className="font-[family-name:var(--font-display)] text-3xl">
+          <p className="font-display text-3xl">
             {cumplidas}
           </p>
           <p className="text-muted text-sm">cumplidas</p>
@@ -61,7 +61,7 @@ export default function PromesasPage() {
             </div>
 
             <blockquote className="mt-3 flex-1">
-              <p className="font-[family-name:var(--font-display)] text-lg leading-relaxed">
+              <p className="font-display text-lg leading-relaxed">
                 “{p.texto}”
               </p>
             </blockquote>

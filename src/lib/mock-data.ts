@@ -5,13 +5,13 @@
  */
 
 export const usuario = {
-  nombre: "Sofía",
+  nombre: "Sharid",
   email: "sofia@ejemplo.com",
   zonaHoraria: "America/Bogota",
 };
 
 export const pareja = {
-  nombre: "Mateo",
+  nombre: "Felipe",
   vinculadaEn: "2026-02-14",
   diasJuntos: 254,
   rachaPareja: 24,

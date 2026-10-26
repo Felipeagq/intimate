@@ -17,15 +17,22 @@ import {
   pareja,
   promesas,
   rachas,
-  usuario,
 } from "@/lib/mock-data";
+import { requerirSesion } from "@/server/session";
 import { formatDate } from "@/lib/utils";
 
 export const metadata = { title: "Inicio" };
 
 const promesaDelDia = promesas[0];
 
-export default function InicioPage() {
+export default async function InicioPage() {
+  const sesion = await requerirSesion();
+  // Al entrar con código no hay nombre todavía: se cae al correo hasta que
+  // el onboarding lo pregunte.
+  const nombre =
+    sesion.user.name?.trim().split(" ")[0] ||
+    capitalizar(sesion.user.email.split("@")[0]);
+
   const hoy = formatDate(new Date(), {
     weekday: "long",
     day: "numeric",
@@ -36,7 +43,7 @@ export default function InicioPage() {
     <div className="space-y-4">
       <div className="mb-6">
         <p className="text-muted text-sm capitalize">{hoy}</p>
-        <h1 className="mt-1 text-3xl sm:text-4xl">Hola, {usuario.nombre}</h1>
+        <h1 className="mt-1 text-3xl sm:text-4xl">Hola, {nombre}</h1>
       </div>
 
       {/* Devocional de hoy: la acción principal de la pantalla. */}
@@ -56,7 +63,7 @@ export default function InicioPage() {
 
         <div className="border-ink-700/10 mt-5 grid gap-3 border-t pt-5 sm:grid-cols-2 dark:border-white/10">
           <EstadoPersona
-            nombre={usuario.nombre}
+            nombre={nombre}
             listo={devocionalHoy.yoRespondi}
             textoListo="Ya escribiste"
             textoPendiente="Te falta escribir"
@@ -111,21 +118,21 @@ export default function InicioPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="p-5">
           <Flame className="text-accent size-5" aria-hidden />
-          <p className="mt-3 font-[family-name:var(--font-display)] text-4xl">
+          <p className="mt-3 font-display text-4xl">
             {pareja.rachaPareja}
           </p>
           <p className="text-muted mt-1 text-sm">Racha de pareja</p>
         </Card>
         <Card className="p-5">
           <Flame className="text-muted size-5" aria-hidden />
-          <p className="mt-3 font-[family-name:var(--font-display)] text-4xl">
+          <p className="mt-3 font-display text-4xl">
             {rachas.actual}
           </p>
           <p className="text-muted mt-1 text-sm">Tu racha personal</p>
         </Card>
         <Card className="p-5">
           <Check className="text-muted size-5" aria-hidden />
-          <p className="mt-3 font-[family-name:var(--font-display)] text-4xl">
+          <p className="mt-3 font-display text-4xl">
             {rachas.constanciaDelMes}%
           </p>
           <p className="text-muted mt-1 text-sm">Constancia del mes</p>
@@ -169,7 +176,7 @@ export default function InicioPage() {
           </p>
         </div>
         <blockquote className="mt-3">
-          <p className="font-[family-name:var(--font-display)] text-xl leading-relaxed">
+          <p className="font-display text-xl leading-relaxed">
             “{promesaDelDia.texto}”
           </p>
           <cite className="text-accent mt-3 block text-sm font-medium not-italic">
@@ -216,4 +223,9 @@ function EstadoPersona({
       </div>
     </div>
   );
+}
+
+function capitalizar(texto: string) {
+  const limpio = texto.replace(/[._-]+/g, " ").trim();
+  return limpio.charAt(0).toUpperCase() + limpio.slice(1);
 }

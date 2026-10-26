@@ -3,7 +3,6 @@ import {
   Download,
   Fingerprint,
   Globe,
-  LogOut,
   Trash2,
   UserMinus,
   Mail,
@@ -11,7 +10,9 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
-import { pareja, usuario } from "@/lib/mock-data";
+import { pareja } from "@/lib/mock-data";
+import { requerirSesion } from "@/server/session";
+import { CerrarSesion } from "./cerrar-sesion";
 
 export const metadata = { title: "Ajustes" };
 
@@ -22,7 +23,11 @@ const notificaciones = [
   { id: "pareja", label: `${pareja.nombre} respondió el devocional`, activa: true },
 ];
 
-export default function AjustesPage() {
+export default async function AjustesPage() {
+  const sesion = await requerirSesion();
+  const zonaHoraria =
+    (sesion.user as { zonaHoraria?: string }).zonaHoraria ?? "America/Bogota";
+
   return (
     <div>
       <PageHeader eyebrow="Ajustes" title="Tu cuenta" />
@@ -36,14 +41,14 @@ export default function AjustesPage() {
                 <Mail className="size-4" aria-hidden />
                 Correo
               </dt>
-              <dd className="font-medium">{usuario.email}</dd>
+              <dd className="font-medium">{sesion.user.email}</dd>
             </div>
             <div className="flex items-center justify-between gap-4">
               <dt className="text-muted flex items-center gap-2">
                 <Globe className="size-4" aria-hidden />
                 Zona horaria
               </dt>
-              <dd className="font-medium">{usuario.zonaHoraria}</dd>
+              <dd className="font-medium">{zonaHoraria}</dd>
             </div>
           </dl>
           <p className="text-muted mt-4 text-xs leading-relaxed">
@@ -139,10 +144,7 @@ export default function AjustesPage() {
           </div>
         </Card>
 
-        <Button variant="ghost" className="w-full">
-          <LogOut className="size-4" aria-hidden />
-          Cerrar sesión
-        </Button>
+        <CerrarSesion />
       </div>
     </div>
   );

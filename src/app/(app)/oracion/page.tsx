@@ -59,26 +59,26 @@ export default function OracionPage() {
         <div className="grid gap-4 sm:grid-cols-4">
           <Card className="p-5">
             <Flame className="text-accent size-5" aria-hidden />
-            <p className="mt-3 font-[family-name:var(--font-display)] text-4xl">
+            <p className="mt-3 font-display text-4xl">
               {rachas.actual}
             </p>
             <p className="text-muted mt-1 text-sm">Racha actual</p>
           </Card>
           <Card className="p-5">
             <p className="text-muted text-sm">Racha más larga</p>
-            <p className="mt-2 font-[family-name:var(--font-display)] text-4xl">
+            <p className="mt-2 font-display text-4xl">
               {rachas.masLarga}
             </p>
           </Card>
           <Card className="p-5">
             <p className="text-muted text-sm">Constancia del mes</p>
-            <p className="mt-2 font-[family-name:var(--font-display)] text-4xl">
+            <p className="mt-2 font-display text-4xl">
               {rachas.constanciaDelMes}%
             </p>
           </Card>
           <Card className="p-5">
             <p className="text-muted text-sm">Minutos esta semana</p>
-            <p className="mt-2 font-[family-name:var(--font-display)] text-4xl">
+            <p className="mt-2 font-display text-4xl">
               {rachas.minutosEstaSemana}
             </p>
           </Card>

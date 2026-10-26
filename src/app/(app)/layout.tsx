@@ -3,16 +3,19 @@ import { Settings } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { BottomNav, Sidebar } from "@/components/app-nav";
 import { Card } from "@/components/ui/card";
-import { pareja, usuario } from "@/lib/mock-data";
+import { requerirSesion } from "@/server/session";
+import { pareja } from "@/lib/mock-data";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Sesión real: sin ella, esto redirige a /entrar antes de renderizar nada.
+  const sesion = await requerirSesion();
+
   return (
     <div className="mx-auto flex min-h-dvh max-w-6xl gap-6 px-3 sm:px-4">
-      {/* Columna fija en escritorio */}
       <aside className="hidden w-60 shrink-0 py-6 lg:block">
         <div className="sticky top-6 space-y-6">
           <Link href="/inicio" className="block cursor-pointer px-2">
@@ -21,7 +24,7 @@ export default function AppLayout({
           <Sidebar />
           <Card className="p-4">
             <p className="text-muted text-xs">Racha de pareja</p>
-            <p className="mt-1 font-[family-name:var(--font-display)] text-3xl">
+            <p className="mt-1 font-display text-3xl">
               {pareja.rachaPareja}
               <span className="text-muted ml-1.5 text-sm">días</span>
             </p>
@@ -40,14 +43,13 @@ export default function AppLayout({
       </aside>
 
       <div className="min-w-0 flex-1">
-        {/* Cabecera solo en móvil; en escritorio la identidad vive en la barra lateral. */}
         <header className="flex items-center justify-between py-4 lg:hidden">
           <Link href="/inicio" className="cursor-pointer">
             <Logo />
           </Link>
           <Link
             href="/ajustes"
-            aria-label="Ajustes"
+            aria-label={`Ajustes de ${sesion.user.name || sesion.user.email}`}
             className="glass glass-hover flex size-11 cursor-pointer items-center justify-center"
           >
             <Settings className="size-5" aria-hidden />
@@ -59,7 +61,6 @@ export default function AppLayout({
       </div>
 
       <BottomNav />
-      <span className="sr-only">Sesión de {usuario.nombre}</span>
     </div>
   );
 }

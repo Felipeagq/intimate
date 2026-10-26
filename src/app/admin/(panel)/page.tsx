@@ -42,7 +42,7 @@ export default function AdminDashboard() {
             <Card key={label} flat className="p-5">
               <p className="text-muted text-sm">{label}</p>
               <div className="mt-2 flex items-baseline gap-3">
-                <p className="font-[family-name:var(--font-display)] text-4xl">
+                <p className="font-display text-4xl">
                   {dato.valor.toLocaleString("es")}
                   {sufijo}
                 </p>

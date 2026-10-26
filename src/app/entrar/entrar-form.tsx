@@ -1,31 +1,71 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Mail, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
+import { authClient } from "@/lib/auth-client";
 
-export function EntrarForm() {
+export function EntrarForm({ googleHabilitado }: { googleHabilitado: boolean }) {
+  const router = useRouter();
   const [paso, setPaso] = useState<"email" | "codigo">("email");
   const [email, setEmail] = useState("");
-  const [enviando, setEnviando] = useState(false);
+  const [codigo, setCodigo] = useState("");
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const enviar = (e: React.FormEvent) => {
+  const pedirCodigo = async (e: React.FormEvent) => {
     e.preventDefault();
-    setEnviando(true);
-    // Pendiente: Server Action que envía el enlace mágico.
-    setTimeout(() => {
-      setEnviando(false);
-      setPaso("codigo");
-    }, 700);
+    setCargando(true);
+    setError(null);
+
+    const { error: err } = await authClient.emailOtp.sendVerificationOtp({
+      email,
+      type: "sign-in",
+    });
+
+    setCargando(false);
+    if (err) {
+      setError(err.message ?? "No pudimos enviar el código. Inténtalo de nuevo.");
+      return;
+    }
+    setPaso("codigo");
+  };
+
+  const entrar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCargando(true);
+    setError(null);
+
+    const { error: err } = await authClient.signIn.emailOtp({ email, otp: codigo });
+
+    setCargando(false);
+    if (err) {
+      setError(
+        err.message ?? "El código no es válido o ya caducó. Pide uno nuevo.",
+      );
+      return;
+    }
+    router.push("/inicio");
+    router.refresh();
+  };
+
+  const entrarConGoogle = async () => {
+    setError(null);
+    await authClient.signIn.social({ provider: "google", callbackURL: "/inicio" });
   };
 
   if (paso === "codigo") {
     return (
       <Card className="p-7">
         <button
-          onClick={() => setPaso("email")}
+          type="button"
+          onClick={() => {
+            setPaso("email");
+            setError(null);
+          }}
           className="text-muted hover:text-foreground mb-5 flex cursor-pointer items-center gap-1.5 text-sm transition-colors duration-200"
         >
           <ArrowLeft className="size-4" aria-hidden />
@@ -35,29 +75,48 @@ export function EntrarForm() {
         <h1 className="text-2xl">Revisa tu correo</h1>
         <p className="text-muted mt-2 text-sm leading-relaxed">
           Enviamos un código de seis dígitos a{" "}
-          <span className="text-foreground font-medium">{email}</span>. También
-          puedes entrar con el enlace del mensaje.
+          <span className="text-foreground font-medium">{email}</span>. Caduca
+          en diez minutos.
         </p>
 
-        <form className="mt-6">
+        <form onSubmit={entrar} className="mt-6">
           <Field htmlFor="codigo" label="Código">
             <Input
               id="codigo"
               inputMode="numeric"
               autoComplete="one-time-code"
               maxLength={6}
+              required
+              value={codigo}
+              onChange={(e) =>
+                setCodigo(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
               placeholder="000000"
-              className="text-center font-[family-name:var(--font-display)] text-2xl tracking-[0.4em]"
+              className="text-center font-display text-2xl tracking-[0.4em]"
             />
           </Field>
-          <Button type="submit" className="mt-4 w-full">
+
+          <ErrorMsg error={error} />
+
+          <Button
+            type="submit"
+            loading={cargando}
+            disabled={codigo.length !== 6}
+            className="mt-4 w-full"
+          >
             Entrar
           </Button>
         </form>
 
         <p className="text-muted mt-5 text-center text-sm">
           ¿No llegó?{" "}
-          <button className="text-accent cursor-pointer font-medium underline">
+          <button
+            type="button"
+            onClick={() =>
+              authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" })
+            }
+            className="text-accent cursor-pointer font-medium underline"
+          >
             Reenviar
           </button>
         </p>
@@ -69,10 +128,10 @@ export function EntrarForm() {
     <Card className="p-7">
       <h1 className="text-2xl">Entra a Intimate</h1>
       <p className="text-muted mt-2 text-sm leading-relaxed">
-        Te mandamos un enlace al correo. Sin contraseñas que recordar.
+        Te mandamos un código al correo. Sin contraseñas que recordar.
       </p>
 
-      <form onSubmit={enviar} className="mt-6">
+      <form onSubmit={pedirCodigo} className="mt-6">
         <Field htmlFor="email" label="Tu correo">
           <Input
             id="email"
@@ -84,28 +143,55 @@ export function EntrarForm() {
             placeholder="tu@correo.com"
           />
         </Field>
+
+        <ErrorMsg error={error} />
+
         <Button
           type="submit"
-          loading={enviando}
+          loading={cargando}
           className="mt-4 w-full"
           disabled={!email.includes("@")}
         >
           <Mail className="size-4" aria-hidden />
-          Enviar enlace
+          Enviar código
         </Button>
       </form>
 
-      <div className="my-6 flex items-center gap-3">
-        <span className="bg-ink-700/12 h-px flex-1 dark:bg-white/12" aria-hidden />
-        <span className="text-muted text-xs">o</span>
-        <span className="bg-ink-700/12 h-px flex-1 dark:bg-white/12" aria-hidden />
-      </div>
+      {/* El botón solo existe si Google está configurado en el servidor.
+          Un botón que no hace nada es peor que no tenerlo. */}
+      {googleHabilitado && (
+        <>
+          <div className="my-6 flex items-center gap-3">
+            <span className="bg-ink-700/12 h-px flex-1 dark:bg-white/12" aria-hidden />
+            <span className="text-muted text-xs">o</span>
+            <span className="bg-ink-700/12 h-px flex-1 dark:bg-white/12" aria-hidden />
+          </div>
 
-      <Button variant="secondary" className="w-full">
-        <GoogleIcon />
-        Continuar con Google
-      </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={entrarConGoogle}
+          >
+            <GoogleIcon />
+            Continuar con Google
+          </Button>
+        </>
+      )}
     </Card>
+  );
+}
+
+function ErrorMsg({ error }: { error: string | null }) {
+  if (!error) return null;
+  return (
+    <p
+      role="alert"
+      className="mt-3 flex items-start gap-2 text-sm text-red-700 dark:text-red-400"
+    >
+      <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+      {error}
+    </p>
   );
 }
 

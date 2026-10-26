@@ -206,7 +206,7 @@ export default function ParejaPage() {
                   aria-label={a.favorita ? "Favorita" : undefined}
                 />
               </div>
-              <p className="mt-3 font-[family-name:var(--font-display)] text-lg leading-relaxed">
+              <p className="mt-3 font-display text-lg leading-relaxed">
                 {a.mensaje}
               </p>
             </Card>

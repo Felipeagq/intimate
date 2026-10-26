@@ -97,7 +97,7 @@ function DevocionalPareja() {
           <Badge tone="honey">Elegido por {pareja.nombre}</Badge>
         </div>
         <blockquote className="border-honey-500 mt-5 border-l-2 pl-4">
-          <p className="font-[family-name:var(--font-display)] text-lg leading-relaxed">
+          <p className="font-display text-lg leading-relaxed">
             {devocionalHoy.texto}
           </p>
         </blockquote>
@@ -193,7 +193,7 @@ function DevocionalPersonal() {
                       : "text-muted hover:bg-white/50 dark:hover:bg-white/8",
                 )}
               >
-                <span className="font-[family-name:var(--font-display)] text-base">
+                <span className="font-display text-base">
                   {p.letra}
                 </span>
                 <span className="hidden sm:block">{p.titulo}</span>

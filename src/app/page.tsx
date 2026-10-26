@@ -159,7 +159,7 @@ export default function LandingPage() {
                     <p className="text-muted text-xs tracking-wide uppercase">
                       Devocional de hoy
                     </p>
-                    <p className="mt-1 font-[family-name:var(--font-display)] text-xl">
+                    <p className="mt-1 font-display text-xl">
                       Eclesiastés 4:9-12
                     </p>
                   </div>
@@ -170,8 +170,8 @@ export default function LandingPage() {
 
                 <div className="border-ink-700/10 mt-5 space-y-3 border-t pt-5 dark:border-white/10">
                   {[
-                    { name: "Sofía", done: true },
-                    { name: "Mateo", done: false },
+                    { name: "Sharid", done: true },
+                    { name: "Felipe", done: false },
                   ].map((p) => (
                     <div key={p.name} className="flex items-center gap-3">
                       <span
@@ -235,7 +235,7 @@ export default function LandingPage() {
             {pasos.map(({ n, title, body }) => (
               <li key={n}>
                 <Card className="h-full p-6">
-                  <span className="text-accent font-[family-name:var(--font-display)] text-3xl">
+                  <span className="text-accent font-display text-3xl">
                     {n}
                   </span>
                   <h3 className="mt-3 text-xl">{title}</h3>

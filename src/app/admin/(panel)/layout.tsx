@@ -3,8 +3,6 @@ import { AdminNav } from "@/components/admin-nav";
 import { LogoMark } from "@/components/brand/logo";
 import { Badge } from "@/components/ui/badge";
 
-export const metadata = { title: { default: "Panel", template: "%s · Panel" } };
-
 export default function AdminLayout({
   children,
 }: {
@@ -19,7 +17,7 @@ export default function AdminLayout({
             className="flex cursor-pointer items-center gap-2.5 px-2"
           >
             <LogoMark className="size-7" />
-            <span className="font-[family-name:var(--font-display)] text-lg">
+            <span className="font-display text-lg">
               Intimate
             </span>
             <Badge tone="neutral" className="text-[0.6rem]">

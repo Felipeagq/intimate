@@ -13,7 +13,7 @@ export default function AdminEntrarPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-center gap-2.5">
           <LogoMark className="size-7" />
-          <span className="font-[family-name:var(--font-display)] text-lg">
+          <span className="font-display text-lg">
             Intimate
           </span>
           <Badge tone="neutral" className="text-[0.6rem]">
