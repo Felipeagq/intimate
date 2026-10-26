@@ -10,10 +10,10 @@ import {
   MessageCircleHeart,
   Plus,
   ScrollText,
-  X,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BotonAlternar } from "@/components/ui/boton-alternar";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { formatDate } from "@/lib/utils";
@@ -351,23 +351,11 @@ function BloqueAcuerdos({
           <ScrollText className="text-accent size-5" aria-hidden />
           <h2 className="text-2xl">Acuerdos</h2>
         </div>
-        <Button
-          size="sm"
-          variant={formulario ? "ghost" : "secondary"}
+        <BotonAlternar
+          abierto={formulario}
           onClick={() => setFormulario((v) => !v)}
-        >
-          {formulario ? (
-            <>
-              <X className="size-4" aria-hidden />
-              Cancelar
-            </>
-          ) : (
-            <>
-              <Plus className="size-4" aria-hidden />
-              Nuevo
-            </>
-          )}
-        </Button>
+          etiqueta="Nuevo"
+        />
       </div>
 
       {formulario && (

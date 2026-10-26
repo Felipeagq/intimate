@@ -78,7 +78,7 @@ function FormularioPersonal({ alCrear }: { alCrear: (id: string) => void }) {
     <form action={crear} className="max-w-xl space-y-4">
       <SeccionesPasaje placeholder="Salmo 23" />
       <SeccionQueSigueSoap numero={2} />
-      <Button type="submit" size="lg" loading={pendiente} className="w-full sm:w-auto">
+      <Button type="submit" loading={pendiente} className="w-full sm:w-auto">
         Empezar el devocional
       </Button>
       <Mensaje error={error} />

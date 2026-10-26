@@ -180,8 +180,8 @@ export function PanelEquipo({
                   aria-pressed={rol === r}
                   className={
                     rol === r
-                      ? "bg-honey-300 text-ink-700 min-h-10 cursor-pointer rounded-full px-4 text-sm font-medium"
-                      : "border-ink-700/15 text-muted hover:text-foreground min-h-10 cursor-pointer rounded-full border px-4 text-sm font-medium transition-colors duration-200 dark:border-white/15"
+                      ? "bg-honey-300 text-ink-700 min-h-11 cursor-pointer rounded-full px-4 text-sm font-medium"
+                      : "border-ink-700/15 text-muted hover:text-foreground min-h-11 cursor-pointer rounded-full border px-4 text-sm font-medium transition-colors duration-200 dark:border-white/15"
                   }
                 >
                   {r}

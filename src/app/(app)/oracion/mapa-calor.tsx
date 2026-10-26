@@ -21,22 +21,23 @@ export function MapaCalor({
   const conRegistro = dias.filter((d) => d.nivel >= 2).length;
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl">Últimos cuatro meses</h2>
-
-      {conRegistro === 0 ? (
-        <p className="text-muted mt-3 leading-relaxed">
-          Todavía no hay nada que mostrar. En cuanto registres tu primera
-          oración, este mapa empieza a llenarse.
+    <Card className="p-5 sm:p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+        <h2 className="text-xl">Últimos cuatro meses</h2>
+        <p className="text-muted text-sm">
+          {conRegistro === 0
+            ? "Sin registros todavía"
+            : `${conRegistro} ${conRegistro === 1 ? "día" : "días"} con registro`}
         </p>
-      ) : (
-        <p className="text-muted mt-1 text-sm">
-          {conRegistro} {conRegistro === 1 ? "día" : "días"} con registro.
+      </div>
+      {conRegistro === 0 && (
+        <p className="text-muted mt-1 text-sm leading-relaxed">
+          En cuanto registres tu primera oración, el mapa empieza a llenarse.
         </p>
       )}
 
       <div
-        className="mt-5 grid grid-flow-col gap-1 overflow-x-auto pb-2"
+        className="mt-4 grid grid-flow-col gap-1 overflow-x-auto pb-2"
         style={{ gridTemplateRows: "repeat(7, minmax(0, 1fr))" }}
         role="img"
         aria-label={`Mapa de constancia: ${constancia}% del mes con oración registrada.`}
@@ -50,7 +51,7 @@ export function MapaCalor({
         ))}
       </div>
 
-      <ul className="text-muted mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs">
+      <ul className="text-muted mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
         {NIVELES.map((n) => (
           <li key={n.texto} className="flex items-center gap-1.5">
             <span className={cn("size-3 rounded-[4px]", n.clase)} aria-hidden />

@@ -77,7 +77,7 @@ export function FormularioPasajePareja({
         </Field>
       </Seccion>
       <SeccionQueSigueParejas numero={3} nombrePareja={nombrePareja} />
-      <Button type="submit" size="lg" loading={pendiente} className="w-full sm:w-auto">
+      <Button type="submit" loading={pendiente} className="w-full sm:w-auto">
         Empezar el devocional
       </Button>
       <Mensaje error={error} />

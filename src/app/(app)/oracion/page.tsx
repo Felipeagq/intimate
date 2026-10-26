@@ -1,4 +1,4 @@
-import { Flame } from "lucide-react";
+import { CalendarCheck, Clock, Flame, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { MapaCalor } from "./mapa-calor";
@@ -28,29 +28,62 @@ export default async function OracionPage() {
       <div className="space-y-4">
         <RegistrarOracion yaRegistrado={metricas.hoyRegistrado} />
 
-        <div className="grid gap-4 sm:grid-cols-4">
-          <Card className="p-5">
-            <Flame className="text-accent size-5" aria-hidden />
-            <p className="mt-3 font-display text-4xl">{metricas.racha}</p>
-            <p className="text-muted mt-1 text-sm">Racha actual</p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-muted text-sm">Racha más larga</p>
-            <p className="mt-2 font-display text-4xl">{metricas.masLarga}</p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-muted text-sm">Constancia del mes</p>
-            <p className="mt-2 font-display text-4xl">
-              {metricas.constanciaDelMes}%
-            </p>
-          </Card>
-          <Card className="p-5">
-            <p className="text-muted text-sm">Minutos esta semana</p>
-            <p className="mt-2 font-display text-4xl">
-              {metricas.minutosEstaSemana}
-            </p>
-          </Card>
-        </div>
+        {/* Las cuatro métricas en una sola tarjeta: dos columnas en el móvil. */}
+        <Card className="p-3 sm:p-4">
+          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              {
+                icono: Flame,
+                etiqueta: "Racha actual",
+                valor: metricas.racha,
+                unidad: metricas.racha === 1 ? "día" : "días",
+                destacada: true,
+              },
+              {
+                icono: Trophy,
+                etiqueta: "Racha más larga",
+                valor: metricas.masLarga,
+                unidad: metricas.masLarga === 1 ? "día" : "días",
+              },
+              {
+                icono: CalendarCheck,
+                etiqueta: "Constancia del mes",
+                valor: `${metricas.constanciaDelMes}%`,
+              },
+              {
+                icono: Clock,
+                etiqueta: "Minutos esta semana",
+                valor: metricas.minutosEstaSemana,
+                unidad: "min",
+              },
+            ].map((m) => (
+              <div
+                key={m.etiqueta}
+                className={
+                  m.destacada
+                    ? "bg-honey-300/25 rounded-2xl p-3.5 dark:bg-white/8"
+                    : "bg-ink-700/6 rounded-2xl p-3.5 dark:bg-white/6"
+                }
+              >
+                <dt className="text-muted flex items-center gap-1.5 text-xs leading-tight">
+                  <m.icono
+                    className={m.destacada ? "text-accent size-4" : "size-4"}
+                    aria-hidden
+                  />
+                  {m.etiqueta}
+                </dt>
+                <dd className="mt-1.5 flex items-baseline gap-1">
+                  <span className="font-display text-3xl leading-none">
+                    {m.valor}
+                  </span>
+                  {m.unidad && (
+                    <span className="text-muted text-xs">{m.unidad}</span>
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Card>
 
         <MapaCalor
           dias={metricas.mapaCalor}

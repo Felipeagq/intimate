@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AlertCircle, Archive, Check, HandHeart, Plus, X } from "lucide-react";
+import { AlertCircle, Archive, Check, HandHeart, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BotonAlternar } from "@/components/ui/boton-alternar";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -60,23 +61,11 @@ export function PanelPeticiones({
     <>
       <div className="flex items-center justify-between pt-4">
         <h2 className="text-2xl">Peticiones</h2>
-        <Button
-          size="sm"
-          variant={formulario ? "ghost" : "secondary"}
+        <BotonAlternar
+          abierto={formulario}
           onClick={() => setFormulario((v) => !v)}
-        >
-          {formulario ? (
-            <>
-              <X className="size-4" aria-hidden />
-              Cancelar
-            </>
-          ) : (
-            <>
-              <Plus className="size-4" aria-hidden />
-              Nueva
-            </>
-          )}
-        </Button>
+          etiqueta="Nueva"
+        />
       </div>
 
       {error && (

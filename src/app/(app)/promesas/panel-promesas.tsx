@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AlertCircle, Check, Plus, Sparkles, X } from "lucide-react";
+import { AlertCircle, Check, Plus, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BotonAlternar } from "@/components/ui/boton-alternar";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -105,22 +106,11 @@ export function PanelPromesas({
           </div>
         </Card>
 
-        <Button
-          variant={formulario ? "ghost" : "primary"}
+        <BotonAlternar
+          abierto={formulario}
           onClick={() => setFormulario((v) => !v)}
-        >
-          {formulario ? (
-            <>
-              <X className="size-4" aria-hidden />
-              Cancelar
-            </>
-          ) : (
-            <>
-              <Plus className="size-4" aria-hidden />
-              Nueva promesa
-            </>
-          )}
-        </Button>
+          etiqueta="Nueva promesa"
+        />
       </div>
 
       {error && (

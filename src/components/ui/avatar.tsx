@@ -72,6 +72,7 @@ export function AvatarPareja({
   dosUrl,
   dosNombre,
   tamano = "lg",
+  anillo = "normal",
   className,
 }: {
   unoUrl: string | null;
@@ -79,10 +80,19 @@ export function AvatarPareja({
   dosUrl: string | null;
   dosNombre: string;
   tamano?: Tamano;
+  /** "fino" para tamaños chicos, donde un anillo grueso se come la foto. */
+  anillo?: "normal" | "fino";
   className?: string;
 }) {
   const solape =
-    tamano === "xl" ? "-ml-7" : tamano === "lg" ? "-ml-5" : "-ml-3.5";
+    tamano === "xl"
+      ? "-ml-7"
+      : tamano === "lg"
+        ? "-ml-5"
+        : anillo === "fino"
+          ? "-ml-4"
+          : "-ml-3.5";
+  const grosor = anillo === "fino" ? "ring-2" : "ring-4";
 
   return (
     <span
@@ -94,13 +104,13 @@ export function AvatarPareja({
         url={unoUrl}
         nombre={unoNombre}
         tamano={tamano}
-        className="ring-background ring-4"
+        className={cn("ring-background", grosor)}
       />
       <Avatar
         url={dosUrl}
         nombre={dosNombre}
         tamano={tamano}
-        className={cn("ring-background ring-4", solape)}
+        className={cn("ring-background", grosor, solape)}
       />
     </span>
   );

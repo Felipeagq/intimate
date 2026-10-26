@@ -12,11 +12,16 @@ const variants: Record<Variant, string> = {
   danger: "bg-red-700 text-white hover:bg-red-800",
 };
 
+// Escala única. Todo botón de la app usa una de estas tres:
+//   sm — acciones dentro de una fila, tarjeta o tabla, y el panel de admin
+//   md — la acción principal de un formulario o tarjeta (por defecto)
+//   lg — solo la portada
+// min-h-11 = 44px, el mínimo táctil accesible. El ancho mínimo evita que dos
+// botones contiguos ("Minutos" / "Registrar") queden de anchos desparejos.
 const sizes: Record<Size, string> = {
-  // min-h-11 = 44px, el mínimo táctil accesible.
-  sm: "min-h-11 px-4 text-sm gap-1.5",
-  md: "min-h-12 px-5 text-sm gap-2",
-  lg: "min-h-14 px-7 text-base gap-2.5",
+  sm: "min-h-11 min-w-24 px-4 text-sm gap-2",
+  md: "min-h-12 min-w-28 px-6 text-sm gap-2",
+  lg: "min-h-14 min-w-36 px-8 text-base gap-2.5",
 };
 
 /**
@@ -29,7 +34,9 @@ export function buttonStyles({
   className,
 }: { variant?: Variant; size?: Size; className?: string } = {}) {
   return cn(
-    "inline-flex cursor-pointer items-center justify-center rounded-full font-medium",
+    "inline-flex cursor-pointer items-center justify-center rounded-full font-medium whitespace-nowrap select-none",
+    // Los iconos miden lo mismo en todos los botones, salvo que traigan tamaño.
+    "[&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0",
     "transition-colors duration-200 ease-out",
     "disabled:cursor-not-allowed disabled:opacity-55",
     variants[variant],
@@ -60,7 +67,7 @@ export function Button({
       aria-busy={loading || undefined}
       {...props}
     >
-      {loading && <Loader2 className="size-4 animate-spin" aria-hidden />}
+      {loading && <Loader2 className="animate-spin" aria-hidden />}
       {children}
     </button>
   );

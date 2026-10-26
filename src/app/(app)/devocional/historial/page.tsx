@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  ArrowLeft,
   BookOpen,
   Check,
   ChevronRight,
@@ -78,15 +77,9 @@ export default async function HistorialPage({
 
   return (
     <div>
-      <Link
-        href="/devocional"
-        className="text-muted hover:text-foreground mb-4 inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm font-medium"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Devocional de hoy
-      </Link>
 
       <PageHeader
+        volver={{ href: "/devocional", etiqueta: "Devocional de hoy" }}
         eyebrow="Devocional"
         title="Todos los devocionales"
         description="Lo que has hecho hasta hoy, lo tuyo y lo de los dos. Toca uno para abrirlo, seguir escribiendo o terminarlo."

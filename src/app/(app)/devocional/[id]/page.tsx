@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
 import { contextoApp } from "@/server/session";
@@ -44,15 +42,9 @@ export default async function DevocionalDetallePage({
 
   return (
     <div>
-      <Link
-        href="/devocional/historial"
-        className="text-muted hover:text-foreground mb-4 inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm font-medium"
-      >
-        <ArrowLeft className="size-4" aria-hidden />
-        Todos los devocionales
-      </Link>
 
       <PageHeader
+        volver={{ href: "/devocional/historial", etiqueta: "Todos los devocionales" }}
         eyebrow={encontrado.tipo === "pareja" ? "En pareja" : "Personal"}
         title={esDeHoy ? "Hoy" : titulo}
         description={esDeHoy ? titulo : undefined}
