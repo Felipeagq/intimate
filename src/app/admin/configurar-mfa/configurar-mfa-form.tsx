@@ -35,6 +35,13 @@ export function ConfigurarMfaForm({ email }: { email: string }) {
       return;
     }
 
+    // El retorno es una unión: solo la variante "totp" trae el URI.
+    if (data.method !== "totp") {
+      setCargando(false);
+      setError("El servidor no devolvió un código TOTP. Avisa al equipo.");
+      return;
+    }
+
     // El QR se genera aquí, en el navegador: el URI del TOTP es un secreto
     // y no debe pasar por un servicio de terceros.
     const dataUrl = await QRCode.toDataURL(data.totpURI, {

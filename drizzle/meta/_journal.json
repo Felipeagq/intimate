@@ -15,6 +15,13 @@
       "when": 1792983842029,
       "tag": "0001_panoramic_cerise",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792985281018,
+      "tag": "0002_flawless_maginty",
+      "breakpoints": true
     }
   ]
 }

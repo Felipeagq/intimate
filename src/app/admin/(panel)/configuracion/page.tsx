@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { PageHeader } from "@/components/ui/page-header";
+import { requerirAdmin } from "@/server/admin-session";
 import { equipo } from "@/lib/mock-admin";
 import { formatDate } from "@/lib/utils";
 
@@ -19,7 +20,10 @@ const flags = [
 
 const tonoRol = { admin: "honey", soporte: "info", lectura: "neutral" } as const;
 
-export default function ConfiguracionPage() {
+export default async function ConfiguracionPage() {
+  // Rechaza aunque el menú no muestre el enlace.
+  await requerirAdmin(["admin"]);
+
   return (
     <div>
       <PageHeader

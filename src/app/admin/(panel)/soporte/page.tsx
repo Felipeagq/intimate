@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { PageHeader } from "@/components/ui/page-header";
+import { requerirAdmin } from "@/server/admin-session";
 import { cuentas } from "@/lib/mock-admin";
 import { formatDate } from "@/lib/utils";
 
@@ -15,7 +16,10 @@ const tonoEstado = {
   "eliminación pendiente": "danger",
 } as const;
 
-export default function SoportePage() {
+export default async function SoportePage() {
+  // Rechaza aunque el menú no muestre el enlace.
+  await requerirAdmin(["admin", "soporte"]);
+
   return (
     <div>
       <PageHeader

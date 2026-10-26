@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { requerirAdmin } from "@/server/admin-session";
 import { eventosAuditoria } from "@/lib/mock-admin";
 
 export const metadata = { title: "Auditoría" };
@@ -13,7 +14,10 @@ const tonoRol = {
   "—": "neutral",
 } as const;
 
-export default function AuditoriaPage() {
+export default async function AuditoriaPage() {
+  // Rechaza aunque el menú no muestre el enlace.
+  await requerirAdmin(["admin"]);
+
   return (
     <div>
       <PageHeader

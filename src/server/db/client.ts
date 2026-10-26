@@ -4,6 +4,8 @@ import ws from "ws";
 import { env } from "@/server/env";
 import * as schema from "./schema";
 import * as adminSchema from "./schema-admin";
+import * as appSchema from "./schema-app";
+import * as auditSchema from "./schema-audit";
 
 /**
  * Driver WebSocket, no HTTP.
@@ -31,5 +33,7 @@ if (process.env.NODE_ENV !== "production") {
   globalForDb.__intimatePool = pool;
 }
 
-export const db = drizzle(pool, { schema: { ...schema, ...adminSchema } });
+export const db = drizzle(pool, {
+  schema: { ...schema, ...adminSchema, ...appSchema, ...auditSchema },
+});
 export type Db = typeof db;

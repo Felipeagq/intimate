@@ -9,7 +9,11 @@
     "lint": "eslint",
     "seed:admin": "tsx --env-file=.env scripts/seed-admin.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:inspect": "tsx --env-file=.env scripts/inspeccionar-db.ts",
+    "db:limpiar": "tsx --env-file=.env scripts/limpiar-datos-prueba.ts",
+    "email:probar": "tsx --env-file=.env scripts/probar-correo.ts",
+    "build:check": "NEXT_DIST_DIR=.next-build next build"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",

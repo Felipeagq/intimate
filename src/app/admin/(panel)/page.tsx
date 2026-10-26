@@ -2,6 +2,7 @@ import { TrendingUp, TrendingDown, ShieldCheck } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
 import { metricas, serieParejas } from "@/lib/mock-admin";
+import { requerirAdmin } from "@/server/admin-session";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Dashboard" };
@@ -23,7 +24,8 @@ const tarjetas = [
   { label: "Retención D30 por pareja", dato: metricas.retencionD30, sufijo: "%" },
 ];
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  await requerirAdmin();
   const max = Math.max(...serieParejas);
 
   return (

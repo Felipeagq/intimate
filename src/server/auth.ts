@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "./db/client";
-import { enviarEmail } from "./email";
+import { enviarEmail, plantillaCodigo } from "./email";
 import { env, googleHabilitado } from "./env";
 
 export const auth = betterAuth({
@@ -42,20 +42,16 @@ export const auth = betterAuth({
       expiresIn: 60 * 10,
       allowedAttempts: 5,
       async sendVerificationOTP({ email, otp, type }) {
-        const asunto =
-          type === "sign-in"
-            ? "Tu código para entrar a Intimate"
-            : "Confirma tu correo en Intimate";
+        const { texto, html } = plantillaCodigo(otp, 10);
 
         await enviarEmail({
           para: email,
-          asunto,
-          texto: [
-            `Tu código es: ${otp}`,
-            "",
-            "Caduca en 10 minutos y solo sirve una vez.",
-            "Si no fuiste tú, puedes ignorar este mensaje.",
-          ].join("\n"),
+          asunto:
+            type === "sign-in"
+              ? `${otp} es tu código para entrar a Intimate`
+              : `${otp} confirma tu correo en Intimate`,
+          texto,
+          html,
         });
       },
     }),

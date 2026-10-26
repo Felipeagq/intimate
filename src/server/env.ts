@@ -19,6 +19,12 @@ const schema = z.object({
   // aparece cuando las dos variables están presentes.
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+
+  // Correo. Sin esto la app arranca igual, pero en desarrollo los mensajes
+  // solo se imprimen en consola y en producción el envío falla explícito.
+  SENDGRID_API_KEY: z.string().startsWith("SG.").optional(),
+  EMAIL: z.string().email("EMAIL debe ser el correo remitente").optional(),
+  EMAIL_NOMBRE: z.string().default("Intimate"),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -35,3 +41,5 @@ export const env = parsed.data;
 export const googleHabilitado = Boolean(
   env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET,
 );
+
+export const correoHabilitado = Boolean(env.SENDGRID_API_KEY && env.EMAIL);
